@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:15
+    container_name: chess_db
+    environment:
+      POSTGRES_USER: chess_user
+      POSTGRES_PASSWORD: chess_pass
+      POSTGRES_DB: chessdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mailer:
+    image: mailhog/mailhog
+    container_name: chess_mailer
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  postgres_data:

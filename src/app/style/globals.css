@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@plugin "daisyui";
+@plugin "tailwindcss-animate";
+
+@plugin "daisyui/theme" {
+    name: "bluechess";
+    default: true;
+    prefersdark: false;
+    color-scheme: light;
+
+    --color-primary: #341e6a;
+    --primary-focus: #4c1d95;
+    --primary-content: #ffffff;
+
+    --color-secondary: #64748b;
+    --secondary-focus: #475569;
+    --secondary-content: #ffffff;
+
+    --color-accent: #1e40af;
+    --accent-focus: #1e3a8a;
+    --accent-content: #ffffff;
+
+    --color-neutral: #1f2937;
+    --neutral-focus: #111827;
+    --neutral-content: #ffffff;
+
+    --color-base-100: #f6f8fd;
+    --base-200: #e5e7eb;
+    --base-300: #d1d5db;
+    --base-content: #1f2937;
+
+    --color-info: #3b82f6;
+    --info-content: #ffffff;
+    --color-success: #22c55e;
+    --success-content: #ffffff;
+    --color-warning: #eab308;
+    --warning-content: #ffffff;
+    --color-error: #ef4444;
+    --error-content: #ffffff;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#main-content {
+    background: url("/Knight.svg") no-repeat 40% bottom fixed;
+    background-size: 30rem;
+}
