@@ -74,7 +74,16 @@ async function startNewGame(gameId, io) {
 app.prepare().then(() => {
     const httpServer = createServer(handler);
 
-    const io = new Server(httpServer);
+    const io = new Server(httpServer, {
+        cors: {
+            origin: [
+                "http://localhost:3000",
+                "https://checkmate-io.up.railway.app"
+            ],
+            methods: ["GET", "POST"],
+            credentials: true
+        }
+    });
     io.on("connection", (socket) => {
         socket.on("join", async ({gameId, userId}) => {
             socket.join(gameId);
