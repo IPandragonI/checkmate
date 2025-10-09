@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
-import {signIn, signUp} from "@/lib/auth-client";
+import {isUsernameAvailable, signIn, signUp} from "@/lib/auth-client";
 import {useSession} from "@/lib/auth-client";
 
 export default function LoginOrRegisterPage() {
@@ -31,6 +31,11 @@ export default function LoginOrRegisterPage() {
         const name = formData.get("name") as string;
         const password = formData.get("password") as string;
 
+        function isValidUsername(username: string) {
+            // min 3, max 30, alphanum, underscore, dot
+            return /^[a-zA-Z0-9_.]{3,30}$/.test(username);
+        }
+
         if (mode === "register") {
             const confirm = formData.get("confirm") as string;
             if (password !== confirm) {
@@ -38,8 +43,24 @@ export default function LoginOrRegisterPage() {
                 setLoading(false);
                 return;
             }
+            if (!isValidUsername(username)) {
+                setError("Nom d'utilisateur invalide. Utilisez 3-30 caractères, lettres, chiffres, _ ou .");
+                setLoading(false);
+                return;
+            }
+            const check = await isUsernameAvailable({ username });
+            if (check.error || check.data?.available === false) {
+                setError("Nom d'utilisateur déjà utilisé.");
+                setLoading(false);
+                return;
+            }
+
             const res = await signUp.email({
-                username: username, email: identifier, password: password, name: name
+                username: username,
+                email: identifier,
+                password: password,
+                name: name,
+                displayUsername: username
             });
             if (res.error) {
                 setError(res.error.message || "Erreur lors de l'inscription, essayez de vous connecter.");
@@ -50,7 +71,7 @@ export default function LoginOrRegisterPage() {
             if (isEmail) {
                 res = await signIn.email({email: identifier, password});
             } else {
-                res = await signIn.username({username: identifier.toLowerCase(), password});
+                res = await signIn.username({username: identifier, password});
             }
             if (res.error) {
                 setError(res.error.message || "Erreur lors de la connexion.");

@@ -12,7 +12,9 @@ export const auth = betterAuth({
         enabled: true,
     },
     plugins: [
-        username()
+        username({
+            usernameNormalization: false
+        })
     ],
     emailVerification: {
         sendOnSignUp: true,
