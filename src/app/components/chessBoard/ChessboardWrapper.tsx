@@ -122,7 +122,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     }, [moveFrom, chessEngine, getMoveOptions, updatePosition, makeBotMove, isOnline, onMove, canPlay]);
 
 
-    const onPieceDrop = useCallback(({sourceSquare, targetSquare}: { sourceSquare: string; targetSquare: string }) => {
+    const onPieceDrop = useCallback(({sourceSquare, targetSquare}: { sourceSquare: Square; targetSquare: string }) => {
         if (!targetSquare) return false;
         if (isOnline && onMove) {
             if (!canPlay) {
