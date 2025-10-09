@@ -69,7 +69,7 @@ export async function handleGameOver({chess, playerWhite, playerBlack, moves, ch
 
     setTimeout(async () => {
         await Swal.fire({
-            title: 'Partie terminée',
+            title: 'Partie terminée !',
             html: `<b>Résultat :</b> ${resultString}<br/><b>Blancs :</b><br/><b>Gagnant :</b> ${result === GameResult.DRAW ? 'Nulle' : winner?.username || 'Inconnu'}`,
             icon: 'info',
             showCancelButton: true,
