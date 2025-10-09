@@ -42,7 +42,7 @@ export default function LoginOrRegisterPage() {
                 username: username, email: identifier, password: password, name: name
             });
             if (res.error) {
-                setError(res.error.message || "Erreur lors de l'inscription.");
+                setError(res.error.message || "Erreur lors de l'inscription, essayez de vous connecter.");
             }
         } else {
             const isEmail = identifier.includes("@");
