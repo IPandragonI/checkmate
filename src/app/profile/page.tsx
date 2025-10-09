@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {useSession} from "@/lib/auth-client";
-import Loader from "@/app/utils/Loader";
+import FullScreenLoader from "@/app/utils/FullScreenLoader";
 
 export default function ProfilePage() {
     const {data: session, isPending} = useSession();
@@ -58,7 +58,7 @@ export default function ProfilePage() {
         }
     }
 
-    if (isPending || loadingPref || !session?.user) return <Loader />;
+    if (isPending || loadingPref || !session?.user) return <FullScreenLoader />;
 
     const {user} = session;
 

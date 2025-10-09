@@ -1,12 +1,12 @@
-import React from "react";
 import Svg from "@/app/utils/Svg";
 import MoveList from "@/app/components/game/MoveList";
 import GameChat from "@/app/components/game/GameChat";
 import Loader from "@/app/utils/Loader";
-import {Flag} from "lucide-react";
 
 interface GameInfosProps {
     game: any;
+    playerWhite: any;
+    playerBlack: any;
     user: any;
     moves: any[];
     chatMessages?: any[];
@@ -14,7 +14,7 @@ interface GameInfosProps {
     socket?: any;
 }
 
-const GameInfos: React.FC<GameInfosProps> = ({game, user, moves, chatMessages, isReconnecting, socket}) => {
+const GameInfos: React.FC<GameInfosProps> = ({game, playerWhite, playerBlack, user, moves, chatMessages, isReconnecting, socket}) => {
     let adversaire = null;
     let adversaireImg = null;
     let adversaireElo = null;
@@ -23,14 +23,14 @@ const GameInfos: React.FC<GameInfosProps> = ({game, user, moves, chatMessages, i
         adversaire = game.bot.name;
         adversaireImg = game.bot.img;
         adversaireElo = game.bot.elo;
-    } else if (user?.id === game.playerWhiteId && game.playerBlack) {
-        adversaire = game.playerBlack.username;
-        adversaireImg = game.playerBlack.image;
-        adversaireElo = game.playerBlack.elo;
-    } else if (user?.id === game.playerBlackId && game.playerWhite) {
-        adversaire = game.playerWhite.username;
-        adversaireImg = game.playerWhite.image;
-        adversaireElo = game.playerWhite.elo;
+    } else if (user?.id === playerWhite.id && playerBlack.id) {
+        adversaire = playerBlack.username;
+        adversaireImg = playerBlack.image;
+        adversaireElo = playerBlack.elo;
+    } else if (user?.id === playerBlack.id && playerWhite.id) {
+        adversaire = playerWhite.username;
+        adversaireImg = playerWhite.image;
+        adversaireElo = playerWhite.elo;
     }
 
     return (
@@ -60,15 +60,14 @@ const GameInfos: React.FC<GameInfosProps> = ({game, user, moves, chatMessages, i
                 ) : (
                     <div className="tabs tabs-lift w-full h-3/6">
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Coups" defaultChecked/>
-                        <div className="tab-content bg-base-100 border-base-300 p-6 h-full">
+                        <div className="tab-content bg-base-100 p-6 h-full">
                             <MoveList moves={moves}/>
                         </div>
                         {!game.bot && (
                             <>
-                                <input type="radio" name="my_tabs_3" className="tab" aria-label="Tchat"/>
-                                <div className="tab-content bg-base-100 border-base-300 p-6 h-full">
-                                    <GameChat socket={socket} gameId={game.id} user={user}
-                                              chatMessages={chatMessages || []}/>
+                                <input type="radio" name="my_tabs_3" className="tab" aria-label="Messages"/>
+                                <div className="tab-content bg-base-100 p-6 h-full">
+                                    <GameChat socket={socket} gameId={game.id} user={user} chatMessages={chatMessages || []}/>
                                 </div>
                             </>
                         )}

@@ -4,7 +4,7 @@ import Sidebar from "@/app/components/ui/Sidebar";
 import Topbar from "@/app/components/ui/Topbar";
 import ThemeProvider from "@/app/components/ui/ThemeProvider";
 import {useSession} from "@/lib/auth-client";
-import Loader from "@/app/utils/Loader";
+import FullScreenLoader from "@/app/utils/FullScreenLoader";
 import {usePathname, useRouter} from "next/navigation";
 import {useEffect} from "react";
 
@@ -13,20 +13,31 @@ function AuthGuard({children}: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const isNotAllowed = !isPending && !session?.user && pathname !== "/auth/login-or-register";
+    const isNotAllowed = !isPending && !session?.user && pathname !== "/auth/login-or-register" && pathname !== "/";
 
     useEffect(() => {
         if (isNotAllowed) {
-            router.push("/auth/login-or-register");
+            router.push("/");
         }
     }, [isNotAllowed, router]);
 
     if (isPending) {
-        return <Loader/>;
+        return <FullScreenLoader/>;
     }
 
     if (isNotAllowed) {
         return null;
+    }
+
+    if (!isPending && !session?.user) {
+        return (
+            <ThemeProvider>
+                <main className="relative min-h-screen overflow-hidden bg-base-100 text-base-content">
+                    <Topbar/>
+                    {children}
+                </main>
+            </ThemeProvider>
+        );
     }
 
     return (
@@ -42,15 +53,5 @@ function AuthGuard({children}: { children: React.ReactNode }) {
 }
 
 export default function ClientLayout({children}: { children: React.ReactNode }) {
-    const pathname = usePathname();
-
-    if (pathname === "/auth/login-or-register") {
-        return (
-            <main className="relative min-h-screen overflow-hidden bg-base-100 text-base-content">
-                {children}
-            </main>
-        );
-    }
-
     return <AuthGuard>{children}</AuthGuard>;
 }

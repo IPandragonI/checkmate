@@ -26,9 +26,10 @@ export default function Topbar() {
 
     return (
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-end gap-4 p-4">
-            <button className="btn btn-circle" aria-label="Notifications">
-                <Bell size={24}/>
-            </button>
+            {/*<button className="btn btn-circle" aria-label="Notifications">*/}
+            {/*    <Bell size={24}/>*/}
+            {/*</button>*/}
+            {user && (
             <div className="dropdown dropdown-end">
                 <div tabIndex={0} role="button" className="btn avatar rounded-full gap-4">
                     {user?.image ? (
@@ -47,6 +48,7 @@ export default function Topbar() {
                     <li><button onClick={handleLogout}>Se déconnecter</button></li>
                 </ul>
             </div>
+            )}
         </div>
     );
 }

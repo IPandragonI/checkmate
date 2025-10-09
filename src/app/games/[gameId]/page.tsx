@@ -14,15 +14,9 @@ export default async function GamePage({params}: { params: { gameId: string } })
     const game = await prisma.game.findUnique({
         where: {id: gameId},
         include: {
-            playerWhite: {
-                select: {id: true, username: true},
-            },
-            playerBlack: {
-                select: {id: true, username: true},
-            },
-            bot: {
-                select: {id: true, name: true},
-            },
+            playerWhite: true,
+            playerBlack: true,
+            bot: true,
         },
     });
 

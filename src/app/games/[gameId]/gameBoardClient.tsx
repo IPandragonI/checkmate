@@ -2,7 +2,7 @@
 import ChessboardWrapper from "@/app/components/chessBoard/ChessboardWrapper";
 import {useSession} from "@/lib/auth-client";
 import GameInfos from "@/app/components/game/GameInfos";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import {getSocket} from "@/socket";
 import {DEFAULT_POSITION} from "chess.js";
 import {Chess} from "chess.js";
@@ -20,16 +20,19 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
 
     const [socket, setSocket] = useState<any>(null);
     const [waiting, setWaiting] = useState(true);
-    const [playerWhiteId, setPlayerWhiteId] = useState(game.playerWhiteId);
-    const [playerBlackId, setPlayerBlackId] = useState(game.playerBlackId);
+    const [playerWhite, setPlayerWhite] = useState(game.playerWhite);
+    const [playerBlack, setPlayerBlack] = useState(game.playerBlack);
     const [moveNumber, setMoveNumber] = useState(0);
     const [boardState, setBoardState] = useState(game.fen || DEFAULT_POSITION);
     const [moves, setMoves] = useState([]);
     const [chatMessages, setChatMessages] = useState([]);
     const [showMatchAnnouncement, setShowMatchAnnouncement] = useState(false);
     const [matchAnnouncementShown, setMatchAnnouncementShown] = useState(false);
+    const [gameOver, setGameOver] = useState(false);
+    const [gameOverReason, setGameOverReason] = useState<string | null>(null);
 
     const isBotGame = !!game.botId;
+    const chess = useRef(new Chess(game.fen || DEFAULT_POSITION));
 
     useEffect(() => {
         if (!user?.id || isBotGame) return;
@@ -49,23 +52,33 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         });
         socket.on("start", (data) => {
             setWaiting(false);
-            setPlayerWhiteId(data.playerWhiteId);
-            setPlayerBlackId(data.playerBlackId);
+            setPlayerWhite(data.playerWhite);
+            setPlayerBlack(data.playerBlack);
+
+            chess.current.load(data.fen || DEFAULT_POSITION);
             if (data.moves && Array.isArray(data.moves) && data.moves.length > 0) {
-                const chess = new Chess();
+                chess.current.reset();
                 data.moves.forEach((move: any) => {
-                    chess.move({
+                    chess.current.move({
                         from: move.fromSquare,
                         to: move.toSquare,
                         promotion: move.promotion || undefined,
                     });
                 });
-                setBoardState(chess.fen());
+                setBoardState(chess.current.fen());
                 setMoveNumber(data.moves.length);
                 setMoves(data.moves);
                 setChatMessages(data.chatMessages || []);
                 setShowMatchAnnouncement(false);
                 setMatchAnnouncementShown(true);
+
+                if (chess.current.isGameOver()) {
+                    setGameOver(true);
+                    setGameOverReason(chess.current.isGameOver() ? "Échec et mat" : chess.current.isDraw() ? "Partie nulle" : chess.current.isStalemate() ? "Pat" : chess.current.isThreefoldRepetition() ? "Répétition triple" : chess.current.isInsufficientMaterial() ? "Matériel insuffisant" : "Fin de partie");
+                } else {
+                    setGameOver(false);
+                    setGameOverReason(null);
+                }
             } else {
                 if (!matchAnnouncementShown) {
                     setShowMatchAnnouncement(true);
@@ -79,14 +92,25 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         };
     }, [game.id, isBotGame, user?.id, showMatchAnnouncement, matchAnnouncementShown]);
 
+    useEffect(() => {
+        if (game.fen) {
+            chess.current.load(game.fen);
+        }
+    }, [game.fen]);
+
     let orientation: "white" | "black" = "white";
-    if (user?.id === playerBlackId) orientation = "black";
-    if (user?.id === playerWhiteId) orientation = "white";
+    if (user?.id === playerBlack?.id) orientation = "black";
+    if (user?.id === playerWhite?.id) orientation = "white";
 
     const handleMove = (move: any) => {
         if (isBotGame) return;
         const nextMoveNumber = moveNumber + 1;
-        setBoardState(move.fen);
+        chess.current.move({
+            from: move.fromSquare,
+            to: move.toSquare,
+            promotion: move.promotion || undefined,
+        });
+        setBoardState(chess.current.fen());
         setMoveNumber(nextMoveNumber);
         socket.emit("move", {
             gameId: game.id,
@@ -95,26 +119,31 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 fromSquare: move.fromSquare,
                 toSquare: move.toSquare,
                 promotion: move.promotion || null,
-                fen: move.fen,
+                fen: chess.current.fen(),
             },
         });
-        console.log(move)
-        if (move.isGameOver && move.gameOverReason) {
-            console.log("Game over detected")
-            console.log(move.gameOverReason)
+
+        if (chess.current.isGameOver()) {
+            console.log('Game over detected');
+            setGameOver(true);
+            setGameOverReason(chess.current.isGameOver() ? "Échec et mat" : chess.current.isDraw() ? "Partie nulle" : chess.current.isStalemate() ? "Pat" : chess.current.isThreefoldRepetition() ? "Répétition triple" : chess.current.isInsufficientMaterial() ? "Matériel insuffisant" : "Fin de partie");
+        } else {
+            setGameOver(false);
+            setGameOverReason(null);
         }
     };
 
-    const currentTurn = boardState.split(" ")[1] === "w" ? playerWhiteId : playerBlackId;
+    const currentTurn = boardState.split(" ")[1] === "w" ? playerWhite?.id : playerBlack?.id;
     const canPlay = user?.id === currentTurn;
 
-    const isReconnecting = game.status === "IN_PROGRESS" && (user?.id === playerWhiteId || user?.id === playerBlackId) && (!socket || waiting);
+    const isReconnecting = game.status === "IN_PROGRESS" && (user?.id === playerWhite?.id || user?.id === playerBlack?.id) && (!socket || waiting);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
         let timerInterval: NodeJS.Timeout | undefined;
         Swal.fire({
             title: "La partie commence !",
+            html: `<b>${playerWhite?.username || "Joueur 1"}</b> (blancs) vs <b>${playerBlack?.username || "Joueur 2"}</b> (noirs)`,
             timer: 2000,
             timerProgressBar: true,
             didOpen: () => {
@@ -129,7 +158,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         return () => {
             if (timerInterval) clearInterval(timerInterval);
         };
-    }, [showMatchAnnouncement]);
+    }, [playerBlack?.username, playerWhite?.username, showMatchAnnouncement]);
 
     if (!isBotGame && waiting && !isReconnecting) {
         return (
@@ -138,7 +167,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 <div className="hidden md:flex items-center justify-center w-3/5 h-full">
                     <div
                         className="w-full h-full max-w-[32rem] max-h-[32rem] aspect-square shadow-lg rounded-lg overflow-hidden flex items-center justify-center mx-auto p-2 bg-base-200 border border-gray-200">
-                        <ChessboardWrapper/>
+                        <ChessboardWrapper />
                     </div>
                 </div>
                 <div className="w-full md:w-2/5">
@@ -173,6 +202,8 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 <GameInfos
                     socket={!isBotGame ? socket : undefined}
                     game={game}
+                    playerWhite={playerWhite}
+                    playerBlack={playerBlack}
                     user={user}
                     moves={moves}
                     chatMessages={!isBotGame ? chatMessages : []}

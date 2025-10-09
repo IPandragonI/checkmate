@@ -45,6 +45,6 @@ body {
 }
 
 #main-content {
-    background: url("/Knight.svg") no-repeat 40% bottom fixed;
+    background: url("/knight.svg") no-repeat 40% bottom fixed;
     background-size: 30rem;
 }

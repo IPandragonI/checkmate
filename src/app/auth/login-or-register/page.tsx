@@ -70,21 +70,20 @@ export default function LoginOrRegisterPage() {
                 <form onSubmit={handleSubmit} className="fieldset w-full max-w-sm p-6">
                     {mode === "register" && (
                         <>
-                            <input name="name" className="input mt-2" type="text" placeholder="Nom complet" required/>
-                            <input name="username" className="input" type="text" placeholder="Nom d'utilisateur"
-                                   required/>
+                            <input name="name" className="input" type="text" placeholder="Nom complet" required autoComplete="name"/>
+                            <input name="username" className="input" type="text" placeholder="Nom d'utilisateur" required autoComplete="x"/>
                         </>
                     )}
                     {mode === "login" ? (
-                        <input name="identifier" className="input mt-2" type="text"
-                               placeholder="Email ou nom d'utilisateur" required/>
+                        <input name="identifier" className="input" type="text"
+                               placeholder="Email ou nom d'utilisateur" required autoComplete="username"/>
                     ) : (
-                        <input name="identifier" className="input mt-2" type="email" placeholder="Email" required/>
+                        <input name="identifier" className="input" type="email" placeholder="Email" required autoComplete="email"/>
                     )}
-                    <input name="password" className="input mt-2" type="password" placeholder="Mot de passe" required/>
+                    <input name="password" className="input" type="password" placeholder="Mot de passe" required autoComplete={mode === "register" ? "new-password" : "current-password"}/>
                     {mode === "register" && (
-                        <input name="confirm" className="input mt-2" type="password"
-                               placeholder="Confirmer le mot de passe" required/>
+                        <input name="confirm" className="input" type="password"
+                               placeholder="Confirmer le mot de passe" required autoComplete="new-password"/>
                     )}
                     <button className="btn btn-neutral mt-4 w-full" type="submit" disabled={loading}>
                         {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "S'inscrire"}
