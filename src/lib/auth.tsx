@@ -18,16 +18,18 @@ export const auth = betterAuth({
     ],
     emailVerification: {
         sendOnSignUp: true,
-        sendVerificationEmail: async ({ user, url}) => {
-            try {
-                await sendEmail({
+        sendVerificationEmail: async ({ user, url }) => {
+            Promise.race([
+                sendEmail({
                     to: user.email,
                     subject: 'Verify your email address',
                     text: `Click the link to verify your email: ${url}?verified=1`
-                });
-            } catch (err) {
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout email')), 5000))
+            ]).catch(err => {
                 console.error('Erreur envoi email:', err);
-            }
+            });
+            return;
         }
     }
 })

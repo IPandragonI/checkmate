@@ -33,7 +33,6 @@ function AuthGuard({children}: { children: React.ReactNode }) {
         return (
             <ThemeProvider>
                 <main className="min-h-screen w-full overflow-hidden bg-base-100 text-base-content">
-                    <Topbar/>
                     {children}
                 </main>
             </ThemeProvider>
