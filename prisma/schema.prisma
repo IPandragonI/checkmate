@@ -109,8 +109,8 @@ model Move {
   game       Game     @relation(fields: [gameId], references: [id])
   gameId     String
   moveNumber Int
-  fromSquare String
-  toSquare   String
+  from String
+  to   String
   promotion  String?
   fen        String
   timestamp  DateTime @default(now())

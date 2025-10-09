@@ -16,7 +16,7 @@ export function getCustomPieces(squareSize: number) {
                 alignItems: 'center',
                 justifyContent: 'center'
             }}>
-                <Svg src={`/pieces/${piece}.svg`} width={squareSize-10} height={squareSize-10} style={{objectFit: 'cover'}} alt={piece}/>
+                <Svg src={`/pieces/${piece}.svg`} width={squareSize-14} height={squareSize-14} style={{objectFit: 'cover'}} alt={piece}/>
             </div>
         );
     });

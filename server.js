@@ -104,8 +104,8 @@ app.prepare().then(() => {
                 data: {
                     gameId,
                     moveNumber: move.moveNumber,
-                    fromSquare: move.fromSquare,
-                    toSquare: move.toSquare,
+                    from: move.from,
+                    to: move.to,
                     promotion: move.promotion || null,
                     fen: move.fen,
                 },

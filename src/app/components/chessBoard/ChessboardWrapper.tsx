@@ -7,19 +7,30 @@ import {getCustomPieces} from "@/app/components/chessBoard/CustomPieces";
 import {getBoardStyles} from "@/app/components/chessBoard/ChessOptions";
 import {Square} from "chess.js";
 
+export interface Move {
+    from: string;
+    to: string;
+    promotion?: string;
+    fen?: string | null;
+    number?: number;
+}
+
 interface ChessboardWrapperProps {
     squareSize?: number;
     boardOrientation?: "white" | "black";
     botElo?: number;
     isStatic?: boolean;
     isOnline?: boolean;
-    onMove?: ((move: { fromSquare: string; toSquare: string; promotion?: string; fen: string | null; isGameOver: boolean; gameOverReason: string | null }) => void) | null;
+    onMove?: ((move: Move) => void) | null;
     boardState?: string;
     canPlay?: boolean;
 }
 
+const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
+const isMobile = viewportWidth < 768;
+
 const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
-                                                                 squareSize = 62,
+                                                                 squareSize = isMobile ? 34 : 66,
                                                                  boardOrientation = "white",
                                                                  botElo,
                                                                  isStatic = true,
@@ -100,15 +111,11 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                 return;
             }
             onMove({
-                fromSquare: moveFrom,
-                toSquare: square,
+                from: moveFrom,
+                to: square,
                 promotion: foundMove.promotion,
                 fen: chessEngine.getFenAfterMove(moveFrom, square, foundMove.promotion),
-                isGameOver: chessEngine.isGameOver(),
-                gameOverReason: chessEngine.getGameOverReason(),
             });
-            chessEngine.move(moveFrom, square, foundMove.promotion);
-            updatePosition();
             setMoveFrom(null);
             setOptionSquares({});
             return;
@@ -134,16 +141,12 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             const foundMove = moves.find((m) => m.from === sourceSquare && m.to === targetSquare);
             if (foundMove) {
                 onMove({
-                    fromSquare: sourceSquare,
-                    toSquare: targetSquare,
+                    from: sourceSquare,
+                    to: targetSquare,
                     promotion: foundMove.promotion,
                     fen: chessEngine.getFenAfterMove(sourceSquare, targetSquare, foundMove.promotion),
-                    isGameOver: chessEngine.isGameOver(),
-                    gameOverReason: chessEngine.getGameOverReason(),
                 });
             }
-            chessEngine.move(sourceSquare, targetSquare, foundMove?.promotion);
-            updatePosition();
             setMoveFrom(null);
             setOptionSquares({});
             return false;

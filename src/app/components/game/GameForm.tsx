@@ -56,6 +56,20 @@ const GameForm = () => {
             const data = await res.json();
             if (!res.ok || !data.gameId) throw new Error(data.error || "Erreur lors de la création de la partie");
             router.push(`/games/${data.gameId}`);
+            if (mode === "online") {
+                try {
+                    await navigator.clipboard.writeText(code);
+                    await Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Code de la partie copié",
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+                } catch (e: any) {}
+            }
         } catch (err: any) {
             await Swal.fire({
                 icon: "error",
@@ -69,7 +83,7 @@ const GameForm = () => {
 
     return (
         <form
-            className="flex flex-col justify-between h-[36rem] p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto"
+            className="flex flex-col justify-between h-[34rem] p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto"
             onSubmit={handleSubmit}>
             <div className={"flex flex-col gap-6"}>
                 <h1 className="text-2xl text-primary font-bold text-center">Nouvelle partie</h1>

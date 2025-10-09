@@ -1,12 +1,6 @@
 import React from "react";
 
-interface Move {
-    fromSquare: string;
-    toSquare: string;
-    promotion?: string;
-    san?: string;
-}
-
+import { Move } from "@/app/components/chessBoard/ChessboardWrapper";
 interface MoveListProps {
     moves: Move[];
 }
@@ -16,8 +10,8 @@ const MoveList: React.FC<MoveListProps> = ({ moves }) => {
     for (let i = 0; i < moves.length; i += 2) {
         pairs.push({
             number: Math.floor(i / 2) + 1,
-            white: moves[i]?.san || `${moves[i]?.toSquare}`,
-            black: moves[i + 1]?.san || (moves[i + 1] ? `${moves[i + 1].toSquare}` : "")
+            white: `${moves[i]?.to}`,
+            black: (moves[i + 1] ? `${moves[i + 1].to}` : "")
         });
     }
 

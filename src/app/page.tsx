@@ -27,9 +27,11 @@ export default function HomePage() {
     }
 
     return (
-        <div className="relative z-10 flex flex-col items-center justify-center h-full gap-8 p-10 min-h-screen" id={"main-content"}>
-            <h1 className="text-4xl font-bold text-center">Bienvenue sur Checkmate</h1>
-            {session?.user ? <Dashboard/> : <DisconnectedHome/>}
+        <div className="h-full" id={"main-content"}>
+            <section className={"h-1/2 flex flex-col items-center justify-center gap-8"}>
+                <h1 className="text-4xl font-bold tracking-wider text-center text-primary">Bienvenue sur Checkmate</h1>
+                {session?.user ? <Dashboard/> : <DisconnectedHome/>}
+            </section>
         </div>
     );
 }

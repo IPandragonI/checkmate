@@ -1,38 +1,37 @@
 import Link from "next/link";
-import { APP_TITLE } from "@/lib/constants";
-import { Crown, Menu, Swords, UsersRound } from 'lucide-react';
+import {APP_TITLE} from "@/lib/constants";
+import {Crown, Swords, UsersRound} from 'lucide-react';
 
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export default function Sidebar({children}: { children: React.ReactNode }) {
     const menuItems = [
-        { name: "Créer une partie", href: "/games/create", icon: Swords },
-        { name: "Rejoindre une partie", href: "/games/join", icon: UsersRound },
+        {name: "Créer une partie", href: "/games/create", icon: Swords},
+        {name: "Rejoindre une partie", href: "/games/join", icon: UsersRound},
     ];
 
     return (
         <aside className="drawer lg:drawer-open">
-            <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
-            <div className="drawer-content flex lg:flex-col">
-                <label htmlFor="my-drawer-2" className="drawer-button lg:hidden p-6 cursor-pointer">
-                    <Menu size={20} />
-                </label>
-                <div className="flex-1 bg-base-100">
-                    {children}
-                </div>
+            <input id="my-drawer-2" type="checkbox" className="drawer-toggle"/>
+            <div className="drawer-content flex flex-col items-center justify-center">
+                {children}
             </div>
-            <div className="drawer-side py-2 bg-base-300 border-r border-base-300">
+            <div className="drawer-side">
                 <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-                <Link className="border-b border-base-300 cursor-pointer" href="/">
-                    <div className="text-2xl font-bold text-primary p-4">
-                        <Crown className="inline-block mr-2 mb-1" size={24}/>
-                        {APP_TITLE}
-                    </div>
-                </Link>
-                <ul className="menu bg-base-200 text-base-content w-64 p-4 space-y-2">
+                <ul className="menu text-base-content min-h-full w-3/4 lg:w-full p-4 bg-base-300">
+                    <li>
+                        <Link className="flex items-center justify-center py-2" href="/">
+                            <Crown className="inline-block mr-2 text-primary/80" size={28}/>
+                            <span className="text-2xl font-extrabold text-primary tracking-wide drop-shadow-sm">
+                            Checkmate
+                            </span>
+                        </Link>
+                    </li>
+                    <div className="divider my-2"></div>
+
                     {menuItems.map((item) => (
                         <li key={item.name}>
                             <Link href={item.href}>
-                                <item.icon className="inline-block mr-2 mb-1" size={16}/>
+                                <item.icon className="inline-block mr-2 text-primary" size={18}/>
                                 {item.name}
                             </Link>
                         </li>
