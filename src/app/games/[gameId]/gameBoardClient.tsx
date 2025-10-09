@@ -53,7 +53,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             setPlayerBlackId(data.playerBlackId);
             if (data.moves && Array.isArray(data.moves) && data.moves.length > 0) {
                 const chess = new Chess();
-                data.moves.forEach((move) => {
+                data.moves.forEach((move: any) => {
                     chess.move({
                         from: move.fromSquare,
                         to: move.toSquare,
