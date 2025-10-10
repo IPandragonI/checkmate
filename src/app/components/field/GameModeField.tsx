@@ -4,7 +4,7 @@ class GameModeField extends Component<{ mode: string, onClick: () => void, onCli
     render() {
         return <div className="form-control">
             <div className="flex justify-center">
-                <div role="tablist" className="tabs tabs-boxed bg-base-200 rounded-lg p-1">
+                <div role="tablist" className="tabs tabs-boxed bg-base-200 rounded-lg p-1 justify-center">
                     <button
                         type="button"
                         role="tab"

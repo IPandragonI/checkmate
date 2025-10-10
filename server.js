@@ -2,6 +2,7 @@ import {createServer} from "node:http";
 import next from "next";
 import {Server} from "socket.io";
 import {PrismaClient} from "@prisma/client";
+import { Chess } from "chess.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -28,6 +29,13 @@ async function fetchExistingGame(socket, existingGame, gameId, io) {
         where: {gameId},
         orderBy: {sentAt: "asc"},
     });
+
+    if (existingGame.status === "FINISHED") {
+        socket.emit("gameOver", {
+            result: existingGame.result,
+        });
+        return;
+    }
 
     io.to(gameId).emit("start", {
         playerWhite: existingGame.playerWhite,
@@ -120,6 +128,30 @@ app.prepare().then(() => {
                 },
             });
             socket.to(gameId).emit("move", move);
+
+            const chess = new Chess(move.fen);
+            if (chess.isGameOver()) {
+                const winner = chess.turn() === 'w' ? 'black' : 'white';
+                let result;
+                if (chess.isCheckmate()) result = winner === 'white' ? 'WHITE_WIN' : 'BLACK_WIN';
+                else if (chess.isDraw()) result = 'DRAW';
+                else if (chess.isDrawByFiftyMoves()) result = 'DRAW';
+                else if (chess.isStalemate()) result = 'STALEMATE';
+                else if (chess.isThreefoldRepetition()) result = 'REPETITION';
+                else if (chess.isInsufficientMaterial()) result = 'STALEMATE';
+                else result = 'DRAW';
+                await prisma.game.update({
+                    where: {id: gameId},
+                    data: {
+                        result,
+                        finishedAt: new Date().toISOString(),
+                        status: 'FINISHED',
+                    },
+                });
+                io.to(gameId).emit("gameOver", {
+                    result,
+                });
+            }
         });
 
         socket.on("messageSend", async ({gameId, msg}) => {

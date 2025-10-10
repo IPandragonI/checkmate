@@ -47,7 +47,7 @@ const GameInfos: React.FC<GameInfosProps> = ({
 
     return (
         <div
-            className="flex flex-col justify-between md:h-[34rem] p-4 md:p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto">
+            className="flex flex-col justify-between md:h-full p-4 md:p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto">
             <div className={"h-full flex flex-col gap-3"}>
                 <div className="flex md:flex-col items-center justify-between h-2/6">
                     <div className="flex md:flex-col items-center">

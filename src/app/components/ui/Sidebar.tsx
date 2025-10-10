@@ -17,7 +17,7 @@ export default function Sidebar({children}: { children: React.ReactNode }) {
             </div>
             <div className="drawer-side">
                 <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-                <ul className="menu text-base-content min-h-full w-3/4 lg:w-full p-4 bg-base-300">
+                <ul className="menu text-base-content min-h-full w-3/4 lg:w-full py-6 px-2 lg:px-6 bg-secondary-content border-0">
                     <li>
                         <Link className="flex items-center justify-center py-2" href="/">
                             <Crown className="inline-block mr-2 text-primary/80" size={28}/>

@@ -63,15 +63,15 @@ export default function ProfilePage() {
     const {user} = session;
 
     return (
-        <main className="p-6 space-y-4 text-base-content min-h-screen">
+        <main className="p-6 space-y-4 text-base-content">
             <h1 className="text-2xl font-bold">Profil</h1>
             {error && <p className="text-red-500">{error}</p>}
             <div className="flex flex-col lg:flex-row items-stretch gap-6">
 
-                <div className="flex flex-col items-center gap-4 border border-base-300 p-6 rounded-lg bg-base-100 shadow w-full lg:w-1/3">
+                <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-secondary-content shadow w-full lg:w-1/3">
                     <p className="text-lg font-semibold">{user.name}</p>
                     <div className="avatar placeholder">
-                        <div className="bg-neutral-focus text-neutral-content rounded-full w-24 h-24 flex items-center justify-center text-3xl">
+                        <div className="bg-neutral-focus w-24 h-24 flex items-center justify-center text-3xl">
                             {user.image ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={user.image} alt="User Avatar"
@@ -86,7 +86,7 @@ export default function ProfilePage() {
                 </div>
 
 
-                <div className="flex flex-col gap-4 border border-base-300 p-6 rounded-lg bg-base-100 shadow w-full lg:w-2/3">
+                <div className="flex flex-col gap-4 p-6 rounded-xl bg-secondary-content shadow w-full lg:w-2/3">
                     <h2 className="text-lg font-semibold">Bio &amp; détails</h2>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div>
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                     {/*</div>*/}
                 </div>
             </div>
-            <div className="flex flex-col gap-4 border border-base-300 p-6 rounded-lg bg-base-100 shadow w-full">
+            <div className="flex flex-col gap-4 p-6 rounded-xl bg-secondary-content shadow w-full">
                 <h2 className="text-lg font-semibold">Préférences</h2>
                 <div className="form-control w-full max-w-xs">
                     <label className="label">

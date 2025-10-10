@@ -26,11 +26,8 @@ interface ChessboardWrapperProps {
     canPlay?: boolean;
 }
 
-const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
-const isMobile = viewportWidth < 768;
-
 const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
-                                                                 squareSize = isMobile ? 34 : 66,
+                                                                 squareSize = 66,
                                                                  boardOrientation = "white",
                                                                  botElo,
                                                                  isStatic = true,
@@ -45,14 +42,26 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     const [chessPosition, setChessPosition] = useState<string>(chessEngine.getFen());
     const [moveFrom, setMoveFrom] = useState<Square | null>(null);
     const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
+    const [windowWidth, setWindowWidth] = useState<number>(typeof window !== "undefined" ? window.innerWidth : 1024);
+
+    const getAdaptiveSquareSize = (width: number) => {
+        if (width >= 1920) return 80;
+        if (width >= 1440) return 70;
+        if (width >= 1280) return 66;
+        if (width >= 1024) return 50;
+        if (width <= 480) return 34;
+        return Math.round(34 + (width - 480) * (66 - 34) / (1024 - 480));
+    };
+
+    const [adaptiveSquareSize, setAdaptiveSquareSize] = useState<number>(() => getAdaptiveSquareSize(windowWidth));
 
     const pieceComponents = useMemo(() => {
-        const pcs = getCustomPieces(squareSize);
+        const pcs = getCustomPieces(adaptiveSquareSize);
         Object.entries(pcs).forEach(([key, val]) => {
             if (!val) console.error(`Piece '${key}' is undefined in getCustomPieces`);
         });
         return pcs;
-    }, [squareSize]);
+    }, [adaptiveSquareSize]);
     const boardStyles = getBoardStyles();
 
     const updatePosition = useCallback(() => {
@@ -178,6 +187,16 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             setChessPosition(chessEngine.getFen());
         }
     }, [boardState, chessEngine]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const width = window.innerWidth;
+            setWindowWidth(width);
+            setAdaptiveSquareSize(getAdaptiveSquareSize(width));
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const chessboardOptions = {
         ...boardStyles,

@@ -1,14 +1,14 @@
 "use client";
 import ChessboardWrapper, {Move} from "@/app/components/chessBoard/ChessboardWrapper";
 import {useSession} from "@/lib/auth-client";
-import GameInfos from "@/app/components/game/GameInfos";
+import GameInfos from "@/app/components/game/panel/GameInfos";
 import {useEffect, useState, useRef} from "react";
 import {getSocket} from "@/socket";
 import {DEFAULT_POSITION} from "chess.js";
 import {Chess} from "chess.js";
 import Swal from "sweetalert2";
 import GameLayout from "@/app/components/game/GameLayout";
-import GameWaiting from "@/app/components/game/GameWaiting";
+import GameWaiting from "@/app/components/game/panel/GameWaiting";
 import {useRouter} from "next/navigation";
 import {GameResult} from "@prisma/client";
 
@@ -48,43 +48,6 @@ interface GameOverHandlerProps {
     router: any;
 }
 
-export async function handleGameOver({chess, playerWhite, playerBlack, moves, chatMessages, gameId, router}: GameOverHandlerProps) {
-    const result = getGameResult(chess) || GameResult.DRAW;
-    const resultString = getGameResultString(result);
-    const winner = chess.turn() === 'w' ? playerBlack : playerWhite;
-    const finishedAt = new Date().toISOString();
-    await fetch('/api/games/' + gameId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            gameId: gameId,
-            result,
-            moves,
-            chatMessages,
-            finishedAt,
-        }),
-    });
-
-    setTimeout(async () => {
-        await Swal.fire({
-            title: 'Partie terminée !',
-            html: `<b>Résultat :</b> ${resultString}<br/><br/><b>Gagnant :</b> ${result === GameResult.DRAW ? 'Nulle' : winner?.username || 'Inconnu'}`,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Rejouer',
-            cancelButtonText: 'Retour au menu',
-        }).then((res) => {
-            if (res.isConfirmed) {
-                router.push("games/create");
-            } else if (res.isDismissed) {
-                router.push("/");
-            }
-        });
-    }, 500);
-}
-
 interface GameBoardClientProps {
     game: any;
 }
@@ -104,7 +67,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const [chatMessages, setChatMessages] = useState<any[]>([]);
     const [showMatchAnnouncement, setShowMatchAnnouncement] = useState(false);
     const [matchAnnouncementShown, setMatchAnnouncementShown] = useState(false);
-    const [isGameOverHandled, setIsGameOverHandled] = useState(false);
 
     const isBotGame = !!game.botId;
     const chess = useRef(new Chess(game.fen || DEFAULT_POSITION));
@@ -119,11 +81,26 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             setMoveNumber(move.moveNumber);
             chess.current.move(move);
             setMoves((prevMoves) => [...prevMoves, move]);
-
-            if (chess.current.isGameOver() && !isGameOverHandled) {
-                setIsGameOverHandled(true);
-                handleGameOver({chess: chess.current, playerWhite, playerBlack, moves: [...moves, move], chatMessages, gameId: game.id, router});
-            }
+        });
+        socket.on("gameOver", async (data) => {
+            const resultString = getGameResultString(data.result);
+            const winner = data.result === "WHITE_WIN" ? playerWhite : data.result === "BLACK_WIN" ? playerBlack : null;
+            setTimeout(async () => {
+                await Swal.fire({
+                    title: 'Partie terminée !',
+                    html: `<b>Résultat :</b> ${resultString}<br/><br/><b>Gagnant :</b> ${data.result === "DRAW" ? 'Nulle' : winner?.username || 'Inconnu'}`,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Rejouer',
+                    cancelButtonText: 'Retour au menu',
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        router.push("create");
+                    } else if (res.isDismissed) {
+                        router.push("/");
+                    }
+                });
+            }, 500);
         });
         socket.on("waiting", () => {
             setWaiting(true);
@@ -132,7 +109,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             setWaiting(false);
             setPlayerWhite(data.playerWhite);
             setPlayerBlack(data.playerBlack);
-
             chess.current.load(data.fen || DEFAULT_POSITION);
             if (data.moves && Array.isArray(data.moves) && data.moves.length > 0) {
                 chess.current.reset();
@@ -157,10 +133,11 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         });
         return () => {
             socket.off("move");
+            socket.off("gameOver");
             socket.off("waiting");
             socket.off("start");
         };
-    }, [game.id, isBotGame, user?.id, showMatchAnnouncement, matchAnnouncementShown, playerWhite, playerBlack, moves, chatMessages, router, isGameOverHandled]);
+    }, [game.id, isBotGame, user?.id, showMatchAnnouncement, matchAnnouncementShown, playerWhite, playerBlack, moves, chatMessages, router]);
 
     useEffect(() => {
         if (game.fen) {
@@ -211,20 +188,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         };
     }, [playerBlack?.username, playerWhite?.username, showMatchAnnouncement]);
 
-    useEffect(() => {
-        if (chess.current.isGameOver() && !isGameOverHandled) {
-            setIsGameOverHandled(true);
-            handleGameOver({
-                chess: chess.current,
-                playerWhite,
-                playerBlack,
-                moves,
-                chatMessages,
-                gameId: game.id,
-                router
-            });
-        }
-    }, [isGameOverHandled, playerWhite, playerBlack, moves, chatMessages, game.id, router]);
 
     const chessboardWrapper =
         <ChessboardWrapper

@@ -10,25 +10,25 @@
     color-scheme: light;
 
     --color-primary: #341e6a;
-    --primary-focus: #4c1d95;
-    --primary-content: #ffffff;
+    --color-primary-focus: #4c1d95;
+    --color-primary-content: #f1f0f6;
 
     --color-secondary: #64748b;
-    --secondary-focus: #475569;
-    --secondary-content: #ffffff;
+    --color-secondary-focus: #475569;
+    --color-secondary-content: #fafafb;
 
     --color-accent: #1e40af;
-    --accent-focus: #1e3a8a;
-    --accent-content: #ffffff;
+    --color-accent-focus: #1e3a8a;
+    --color-accent-content: #ffffff;
 
     --color-neutral: #1f2937;
-    --neutral-focus: #111827;
-    --neutral-content: #ffffff;
+    --color-neutral-focus: #111827;
+    --color-neutral-content: #ffffff;
 
     --color-base-100: #f6f8fd;
-    --base-200: #e5e7eb;
-    --base-300: #d1d5db;
-    --base-content: #1f2937;
+    --color-base-200: #e5e7eb;
+    --color-base-300: #d1d5db;
+    --color-base-content: #1f2937;
 
     --color-info: #3b82f6;
     --info-content: #ffffff;

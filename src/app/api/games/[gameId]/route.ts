@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import prisma from "@/lib/prisma";
 import {getUserFromRequest} from "@/app/api/utils/auth";
+import {GameStatus} from "@prisma/client";
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ gameId: string }> }) {
     const user = await getUserFromRequest(request);
@@ -27,7 +28,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ gam
                 moves,
                 messages: chatMessages,
                 finishedAt: new Date(finishedAt),
-                status: "FINISHED"
+                status: GameStatus.FINISHED
             },
         });
         return NextResponse.json(updatedGame);

@@ -1,11 +1,11 @@
 import React from "react";
 import {Target, Zap, Timer, Clock} from "lucide-react";
 
-const timeModes = [
+export const timeModes = [
     {
         key: "BULLET",
         label: "Bullet",
-        icon: <Target size={18} className="inline-block mr-1 text-red-500"/>,
+        icon: <Target size={18} className="inline-block text-red-500"/>,
         options: [
             {value: "1", label: "1 min"},
             {value: "3", label: "3 min"}
@@ -13,7 +13,7 @@ const timeModes = [
     }, {
         key: "BLITZ",
         label: "Blitz",
-        icon: <Zap size={18} className="inline-block mr-1 text-yellow-500"/>,
+        icon: <Zap size={18} className="inline-block text-yellow-500"/>,
         options: [
             {value: "3", label: "3 min"},
             {value: "5", label: "5 min"},
@@ -22,7 +22,7 @@ const timeModes = [
     {
         key: "RAPID",
         label: "Rapide",
-        icon: <Timer size={18} className="inline-block mr-1 text-blue-500"/>,
+        icon: <Timer size={18} className="inline-block text-blue-500"/>,
         options: [
             {value: "10", label: "10 min"},
             {value: "15", label: "15 min"},
@@ -31,7 +31,7 @@ const timeModes = [
     }, {
         key: "CLASSICAL",
         label: "Classique",
-        icon: <Clock size={18} className="inline-block mr-1 text-green-500"/>,
+        icon: <Clock size={18} className="inline-block text-green-500"/>,
         options: [
             {value: "60", label: "60 min"},
             {value: "120", label: "120 min"}
