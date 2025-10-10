@@ -16,10 +16,12 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
     const losses = gameHistory.filter(g => g.status === "FINISHED" && g.result === "loss" && g.userId === user?.id).length;
     const draws = gameHistory.filter(g => g.status === "FINISHED" && g.result === "draw" && g.userId === user?.id).length;
     const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : "0";
-    const favoriteMode = gameHistory.reduce((acc, game) => {
-        acc[game.timeMode] = (acc[game.timeMode] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+    const favoriteMode = gameHistory
+        .filter(g => g.status === "FINISHED" && (g.playerWhiteId === user?.id || g.playerBlackId === user?.id))
+        .reduce((acc, game) => {
+            acc[game.timeMode] = (acc[game.timeMode] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
 
     const favoriteModeKey = Object.keys(favoriteMode).reduce((a, b) => favoriteMode[a] > favoriteMode[b] ? a : b, "");
     const favoriteModeLabel = timeModes.find(m => m.key === favoriteModeKey)?.label || "N/A";
