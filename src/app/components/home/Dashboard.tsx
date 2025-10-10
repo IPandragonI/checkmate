@@ -7,12 +7,10 @@ import GameHistorySection from "@/app/components/dashboard/GameHistorySection";
 import StatisticsSection from "@/app/components/dashboard/StatisticsSection";
 
 const Dashboard = () => {
+    const {data: session, isPending} = useSession();
     const [user, setUser] = useState(null);
     const [gameHistory, setGameHistory] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const {data: session, isPending} = useSession();
-    if (isPending || !session?.user) return <FullScreenLoader/>;
 
     useEffect(() => {
         if (!session?.user?.id) return;
@@ -25,8 +23,9 @@ const Dashboard = () => {
                 console.log(data);
                 setLoading(false);
             });
-    }, []);
+    }, [session?.user?.id]);
 
+    if (isPending || !session?.user) return <FullScreenLoader/>;
     if (loading) return <FullScreenLoader/>;
 
     return (
