@@ -12,17 +12,6 @@ import GameWaiting from "@/app/components/game/panel/GameWaiting";
 import {useRouter} from "next/navigation";
 import {GameResult} from "@prisma/client";
 
-function getGameResult(chess: Chess): GameResult | null {
-    const winner = chess.turn() === 'w' ? 'black' : 'white';
-    if (chess.isCheckmate()) return winner === 'white' ? GameResult.WHITE_WIN : GameResult.BLACK_WIN;
-    if (chess.isDraw()) return GameResult.DRAW;
-    if (chess.isDrawByFiftyMoves()) return GameResult.DRAW;
-    if (chess.isStalemate()) return GameResult.STALEMATE;
-    if (chess.isThreefoldRepetition()) return GameResult.REPETITION;
-    if (chess.isInsufficientMaterial()) return GameResult.STALEMATE;
-    return null;
-}
-
 function getGameResultString(result: GameResult): string {
     switch (result) {
         case GameResult.WHITE_WIN:
@@ -109,6 +98,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             setWaiting(false);
             setPlayerWhite(data.playerWhite);
             setPlayerBlack(data.playerBlack);
+            setChatMessages(data.chatMessages || []);
             chess.current.load(data.fen || DEFAULT_POSITION);
             if (data.moves && Array.isArray(data.moves) && data.moves.length > 0) {
                 chess.current.reset();
@@ -122,13 +112,11 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 setBoardState(chess.current.fen());
                 setMoveNumber(data.moves.length);
                 setMoves(data.moves);
-                setChatMessages(data.chatMessages || []);
-                setShowMatchAnnouncement(false);
+            }
+
+            if (!matchAnnouncementShown) {
+                setShowMatchAnnouncement(true);
                 setMatchAnnouncementShown(true);
-            } else {
-                if (!matchAnnouncementShown) {
-                    setShowMatchAnnouncement(true);
-                }
             }
         });
         return () => {
@@ -137,7 +125,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             socket.off("waiting");
             socket.off("start");
         };
-    }, [game.id, isBotGame, user?.id, showMatchAnnouncement, matchAnnouncementShown, playerWhite, playerBlack, moves, chatMessages, router]);
+    }, [game.id, isBotGame, user?.id]);
 
     useEffect(() => {
         if (game.fen) {
@@ -152,6 +140,10 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const handleMove = (move: Move) => {
         if (isBotGame) return;
         const nextMoveNumber = moveNumber + 1;
+        chess.current.move(move);
+        setBoardState(chess.current.fen());
+        setMoveNumber(nextMoveNumber);
+        setMoves([...moves, {...move, number: nextMoveNumber}]);
         socket.emit("move", {
             gameId: game.id,
             move: {
@@ -181,7 +173,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             }
         }).then(() => {
             setShowMatchAnnouncement(false);
-            setMatchAnnouncementShown(true);
         });
         return () => {
             if (timerInterval) clearInterval(timerInterval);

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeProvider({ children, theme: initialTheme }: { children: React.ReactNode, theme?: string }) {
-    const [theme, setTheme] = useState(initialTheme || "bluechess");
+    const [theme, setTheme] = useState(initialTheme || "winter");
 
     useEffect(() => {
         if (typeof window !== "undefined") {

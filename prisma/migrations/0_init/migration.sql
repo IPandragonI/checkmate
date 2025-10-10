@@ -129,7 +129,7 @@ CREATE TABLE "RatingHistory" (
 CREATE TABLE "UserPreference" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "theme" TEXT NOT NULL DEFAULT 'bluechess',
+    "theme" TEXT NOT NULL DEFAULT 'nord',
 
     CONSTRAINT "UserPreference_pkey" PRIMARY KEY ("id")
 );

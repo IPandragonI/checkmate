@@ -109,8 +109,8 @@ model Move {
   game       Game     @relation(fields: [gameId], references: [id])
   gameId     String
   moveNumber Int
-  from String
-  to   String
+  from       String
+  to         String
   promotion  String?
   fen        String
   timestamp  DateTime @default(now())
@@ -141,7 +141,7 @@ model UserPreference {
   id     String @id @default(uuid())
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique
-  theme  String @default("bluechess")
+  theme  String @default("winter")
 }
 
 model Bot {

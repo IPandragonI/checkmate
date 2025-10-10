@@ -46,10 +46,9 @@ const GameInfos: React.FC<GameInfosProps> = ({
     const isMobile = viewportWidth < 768;
 
     return (
-        <div
-            className="flex flex-col justify-between md:h-full p-4 md:p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto">
-            <div className={"h-full flex flex-col gap-3"}>
-                <div className="flex md:flex-col items-center justify-between h-2/6">
+        <>
+            <div className="h-full flex flex-col gap-3">
+                <div className="flex md:flex-col items-center gap-2 h-2/6">
                     <div className="flex md:flex-col items-center">
                         {adversaireImg ? (
                             <Svg src={adversaireImg} alt={adversaire} width={isMobile ? 40 : 96} height={isMobile ? 40 : 96} className="mr-4 md:mr-0 md:mb-2"/>
@@ -77,15 +76,14 @@ const GameInfos: React.FC<GameInfosProps> = ({
                 ) : (
                     <div className="hidden md:flex tabs tabs-lift w-full h-3/6">
                         <input type="radio" name="my_tabs_3" className="tab" aria-label="Coups" defaultChecked/>
-                        <div className="tab-content bg-base-100 p-6 h-full">
+                        <div className="tab-content bg-base-100 p-6 h-16">
                             <MoveList moves={moves}/>
                         </div>
                         {!game.bot && (
                             <>
                                 <input type="radio" name="my_tabs_3" className="tab" aria-label="Messages"/>
-                                <div className="tab-content bg-base-100 p-6 h-full">
-                                    <GameChat socket={socket} gameId={game.id} user={user}
-                                              chatMessages={chatMessages || []}/>
+                                <div className="tab-content bg-base-100 p-6 h-16">
+                                    <GameChat socket={socket} gameId={game.id} user={user} chatMessages={chatMessages || []}/>
                                 </div>
                             </>
                         )}
@@ -109,7 +107,7 @@ const GameInfos: React.FC<GameInfosProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

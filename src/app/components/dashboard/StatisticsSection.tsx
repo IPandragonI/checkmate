@@ -4,17 +4,17 @@ import {timeModes} from "@/app/components/field/TimeModeField";
 function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     if (!gameHistory || gameHistory.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow p-6 h-full">
+            <div className="bg-base-200 rounded-xl shadow p-6 h-full">
                 <h2 className="text-lg font-bold mb-4">Statistiques</h2>
                 <p>Aucune partie jouée pour l'instant.</p>
             </div>
         );
     }
 
-    const totalGames = gameHistory.length;
-    const wins = gameHistory.filter(g => g.result === "win" && g.userId === user?.id).length;
-    const losses = gameHistory.filter(g => g.result === "loss" && g.userId === user?.id).length;
-    const draws = gameHistory.filter(g => g.result === "draw" && g.userId === user?.id).length;
+    const totalGames = gameHistory.filter(g => g.status === "FINISHED").length;
+    const wins = gameHistory.filter(g => g.status === "FINISHED" && g.result === "win" && g.userId === user?.id).length;
+    const losses = gameHistory.filter(g => g.status === "FINISHED" && g.result === "loss" && g.userId === user?.id).length;
+    const draws = gameHistory.filter(g => g.status === "FINISHED" && g.result === "draw" && g.userId === user?.id).length;
     const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : "0";
     const favoriteMode = gameHistory.reduce((acc, game) => {
         acc[game.timeMode] = (acc[game.timeMode] || 0) + 1;
@@ -26,9 +26,9 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
     const favoriteModeCount = favoriteMode[favoriteModeKey] || 0;
 
     return (
-        <div className="bg-white rounded-lg shadow p-6 h-full">
+        <div className="bg-base-200 rounded-xl shadow p-6 h-full max-h-[32rem]">
             <h2 className="text-lg font-bold mb-4">Statistiques</h2>
-            <ul className="list bg-secondary-content rounded-box shadow-md">
+            <ul className="list rounded-box">
                 <li className="list-row">
                     <Swords size={24} className="text-primary"/>
                     <div>
@@ -52,7 +52,7 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
             </ul>
 
             <span className="divider"></span>
-            <div className="stats stats-vertical lg:stats-horizontal shadow w-full bg-secondary-content">
+            <div className="stats stats-vertical lg:stats-horizontal shadow w-full bg-base-100">
                 <div className="stat">
                     <div className="stat-title">Victoires</div>
                     <div className="stat-value">{totalGames}</div>
@@ -69,7 +69,7 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
                 </div>
             </div>
 
-            <div className="stats stats-vertical lg:stats-horizontal shadow w-full bg-secondary-content mt-4">
+            <div className="stats stats-vertical lg:stats-horizontal shadow w-full bg-base-100 mt-4">
                 <div className="stat">
                     <div className="stat-figure text-primary">
                         <Heart size={32} className="inline-block"/>

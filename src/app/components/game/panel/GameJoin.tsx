@@ -29,9 +29,7 @@ const GameJoin = () => {
     };
 
     return (
-        <form className="flex flex-col justify-between h-full p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto"
-            onSubmit={handleSubmit}
-        >
+        <form className="flex flex-col justify-between h-full" onSubmit={handleSubmit}>
             <div className={"flex flex-col gap-6"}>
                 <div className="text-2xl font-bold mb-1 text-center">Rejoindre une partie</div>
                 <GameJoinField code={code} setCode={setCode}/>

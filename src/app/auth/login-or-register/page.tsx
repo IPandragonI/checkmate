@@ -82,7 +82,7 @@ export default function LoginOrRegisterPage() {
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-base-300">
-            <section className="bg-base-200 p-8 rounded-xl shadow-md w-full max-w-md text-center">
+            <section className="bg-base-100 p-8 rounded-xl shadow-md w-full max-w-md text-center">
                 <div className="text-2xl font-bold text-primary mb-6">
                     {mode === "login" ? "Connexion" : "Inscription"}
                 </div>

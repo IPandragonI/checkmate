@@ -82,11 +82,9 @@ const GameForm = () => {
     }
 
     return (
-        <form
-            className="flex flex-col justify-between h-full p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto"
-            onSubmit={handleSubmit}>
+        <form className="flex flex-col justify-between h-full" onSubmit={handleSubmit}>
             <div className={"flex flex-col gap-6"}>
-                <h1 className="text-2xl text-primary font-bold text-center">Nouvelle partie</h1>
+                <h1 className="text-3xl font-bold text-center">Nouvelle partie</h1>
                 <GameModeField mode={mode} onClick={() => setMode("online")} onClick1={() => setMode("bot")}/>
                 {mode === "bot" && (
                     <>

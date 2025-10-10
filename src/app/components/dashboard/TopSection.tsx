@@ -3,10 +3,10 @@ import {Swords, UsersRound} from "lucide-react";
 
 function TopSection({user}: { user?: any }) {
     return (
-        <div className="bg-secondary-content rounded-xl h-32 flex text-2xl font-bold p-6">
+        <div className="bg-base-200 rounded-xl h-32 flex text-2xl font-bold p-6">
             <div className="flex flex-col justify-center flex-1">
                 <p className="text-base md:text-2xl font-bold">Bonjour, {user?.name} !</p>
-                <Link href="/profile" className="mt-2 inline-block text-blue-500 hover:underline text-sm">Voir mon
+                <Link href="/profile" className="mt-2 inline-block text-primary hover:underline text-sm">Voir mon
                     profil</Link>
             </div>
             <div className="flex items-center justify-center">

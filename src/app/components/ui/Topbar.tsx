@@ -4,9 +4,11 @@ import {Bell, Menu} from "lucide-react";
 import Link from "next/link";
 import {useSession, signOut} from "@/lib/auth-client";
 import Swal from 'sweetalert2'
+import {useRouter} from "next/navigation";
 
 export default function Topbar() {
     const {user} = useSession().data || {};
+    const router = useRouter();
 
     function handleLogout() {
         Swal.fire({
@@ -19,7 +21,7 @@ export default function Topbar() {
         }).then((result) => {
             if (result.isConfirmed) {
                 signOut();
-                window.location.href = "/auth/login-or-register";
+                router.push("/");
             }
         });
     }

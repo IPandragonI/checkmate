@@ -7,7 +7,7 @@ import FullScreenLoader from "@/app/utils/FullScreenLoader";
 export default function ProfilePage() {
     const {data: session, isPending} = useSession();
     const [error, setError] = useState<string | null>(null);
-    const [theme, setTheme] = useState<string>("bluechess");
+    const [theme, setTheme] = useState<string>("light");
     const [loadingPref, setLoadingPref] = useState(true);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -32,12 +32,6 @@ export default function ProfilePage() {
         fetchPreference();
     }, []);
 
-    function handleThemeChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const newTheme = e.target.value;
-        setTheme(newTheme);
-        document.body.setAttribute("data-theme", newTheme);
-    }
-
     async function savePreferences() {
         setSaving(true);
         setSuccess(false);
@@ -51,6 +45,7 @@ export default function ProfilePage() {
             if (!res.ok) throw new Error("Erreur lors de la sauvegarde des préférences");
             setSuccess(true);
             setTimeout(() => setSuccess(false), 2500);
+            document.body.setAttribute("data-theme", theme);
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -68,7 +63,7 @@ export default function ProfilePage() {
             {error && <p className="text-red-500">{error}</p>}
             <div className="flex flex-col lg:flex-row items-stretch gap-6">
 
-                <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-secondary-content shadow w-full lg:w-1/3">
+                <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-base-200 shadow w-full lg:w-1/3">
                     <p className="text-lg font-semibold">{user.name}</p>
                     <div className="avatar placeholder">
                         <div className="bg-neutral-focus w-24 h-24 flex items-center justify-center text-3xl">
@@ -86,7 +81,7 @@ export default function ProfilePage() {
                 </div>
 
 
-                <div className="flex flex-col gap-4 p-6 rounded-xl bg-secondary-content shadow w-full lg:w-2/3">
+                <div className="flex flex-col gap-4 p-6 rounded-xl bg-base-200 shadow w-full lg:w-2/3">
                     <h2 className="text-lg font-semibold">Bio &amp; détails</h2>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div>
@@ -115,17 +110,23 @@ export default function ProfilePage() {
                     {/*</div>*/}
                 </div>
             </div>
-            <div className="flex flex-col gap-4 p-6 rounded-xl bg-secondary-content shadow w-full">
+            <div className="flex flex-col gap-4 p-6 rounded-xl bg-base-200 shadow w-full">
                 <h2 className="text-lg font-semibold">Préférences</h2>
-                <div className="form-control w-full max-w-xs">
-                    <label className="label">
-                        <span className="label-text">Thème</span>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <label htmlFor="theme" className="font-medium text-slate-500 min-w-[120px]">
+                        Thème
                     </label>
-                    <select className="select select-bordered" value={theme} onChange={handleThemeChange}>
-                        <option value="bluechess">Bluechess</option>
-                        <option value="dark">Sombre</option>
+                    <select id="theme" className="select select-bordered w-full max-w-xs" value={theme} onChange={(e) => setTheme(e.target.value)}>
+                        <option value="corporate">Corporate</option>
+                        <option value="valentine">Valentine</option>
+                        <option value="lofi">Lofi</option>
+                        <option value="night">Night</option>
+                        <option value="winter">Winter</option>
                     </select>
                 </div>
+
+
                 <div className="mt-4 flex items-center gap-4">
                     <button className="btn btn-primary" onClick={savePreferences} disabled={saving}>
                         {saving ? (

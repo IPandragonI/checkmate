@@ -29,7 +29,6 @@ export default function HomePage() {
     return (
         <div className={`${session?.user ? "h-full" : "h-screen"}`} id={"main-content"}>
             <section className={"h-full flex flex-col gap-8 pb-40 px-2 md:px-8"}>
-                <h1 className="text-4xl font-bold tracking-wider text-primary">Bienvenue sur Checkmate</h1>
                 {session?.user ? <Dashboard/> : <DisconnectedHome/>}
             </section>
         </div>

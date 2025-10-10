@@ -32,7 +32,7 @@ function AuthGuard({children}: { children: React.ReactNode }) {
     if (!isPending && !session?.user) {
         return (
             <ThemeProvider>
-                <main className="min-h-screen w-full overflow-hidden bg-primary-content text-base-content">
+                <main className="min-h-screen w-full overflow-hidden bg-base-100 text-base">
                     {children}
                 </main>
             </ThemeProvider>
@@ -42,7 +42,7 @@ function AuthGuard({children}: { children: React.ReactNode }) {
     return (
         <ThemeProvider>
             <Sidebar>
-                <main className="min-h-screen w-full overflow-hidden bg-primary-content text-base-content">
+                <main className="min-h-screen w-full overflow-hidden bg-base-100 text-base-content">
                     <Topbar/>
                     {children}
                 </main>

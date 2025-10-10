@@ -45,7 +45,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     const [windowWidth, setWindowWidth] = useState<number>(typeof window !== "undefined" ? window.innerWidth : 1024);
 
     const getAdaptiveSquareSize = (width: number) => {
-        if (width >= 1920) return 80;
+        if (width >= 1920) return 81;
         if (width >= 1440) return 70;
         if (width >= 1280) return 66;
         if (width >= 1024) return 50;
