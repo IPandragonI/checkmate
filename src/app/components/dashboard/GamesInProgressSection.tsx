@@ -7,7 +7,7 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
 
     if (!gamesInProgress.length) {
         return (
-            <div className="col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full flex items-center justify-center">
+            <div className="col-span-4 xl:col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-lg font-bold mb-2">Parties en cours</h2>
                     <p>Aucune partie en cours.</p>
@@ -17,7 +17,7 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
     }
 
     return (
-        <div className="col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full overflow-y-auto max-h-[32rem]">
+        <div className="col-span-4 xl:col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full overflow-y-auto max-h-[32rem]">
             <h2 className="text-lg font-bold mb-4">Parties en cours</h2>
             <ul className="space-y-4 overflow-y-auto">
                 {gamesInProgress.map((game) => {
@@ -27,7 +27,7 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                     const timeModeObj = timeModes.find(m => m.key === game.timeMode) || {label: game.timeMode, icon: null};
                     return (
                         <li key={game.id} className="flex flex-col gap-2 p-3 rounded-xl bg-base-100 shadow">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center xl:flex-col xl:items-start">
                                 <div className="flex gap-2 items-center">
                                     <div>{timeModeObj.icon}</div>
                                     <div className="font-semibold " >{game.timeLimit} min</div>
@@ -35,10 +35,10 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                                 <span className="text-xs text-gray-500">{game.createdAt ? new Date(game.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <div className="flex justify-center gap-2 w-full">
+                                <div className="flex justify-center gap-2 w-full items-center">
                                     <Svg src={`${!isWhite ? '/pieces/wP.svg' : '/pieces/bP.svg'}`} alt={couleur} width={20} height={20}/>
-                                    <span className="">{adversaire?.username}</span>
-                                    <p className="text-gray-500">({adversaire?.elo})</p>
+                                    <span className="xl:text-xs">{adversaire?.username}</span>
+                                    <p className="xl:text-xs text-gray-500">({adversaire?.elo})</p>
                                 </div>
                             </div>
                             <Link href={`/games/${game.id}`} className="btn btn-primary btn-sm w-full mt-2">Rejoindre</Link>

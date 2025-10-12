@@ -40,7 +40,7 @@ function Sidebar({children}: { children: React.ReactNode }) {
 }
 
 const MenuOpener = () => (
-    <div className={"absolute top-2 left-2 z-50"}>
+    <div className={"absolute top-10 left-5 z-50"}>
         <label htmlFor="my-drawer-2" className="btn btn-ghost drawer-button lg:hidden">
             <Menu size={20}/>
         </label>

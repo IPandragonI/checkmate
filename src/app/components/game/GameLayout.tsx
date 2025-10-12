@@ -19,17 +19,19 @@ const GameLayout: React.FC<GameLayoutProps> = ({
 
     return (
         <div className={`flex ${isGameStarted ? "flex-col-reverse md:flex-row" : "flex-row"} items-start justify-center gap-8 w-full overflow-hidden h-screen p-6`}>
-            <div className={`${isGameStarted ? "" : "hidden"} md:flex gap-4 flex-col items-center justify-center md:w-3/5 w-full h-full`}>
-                <div className={`h-full w-full max-w-sm lg:max-w-md 2xl:max-w-lg mx-auto flex flex-col items-center gap-2 justify-start md:justify-between py-8 md:py-0`}>
-                    <GamePlayerInfo isGameStarted={isGameStarted} player={user?.id === whitePlayer?.id ? blackPlayer : whitePlayer}/>
-                    <div className={"w-full max-w-sm lg:max-w-md 2xl:max-w-lg aspect-square shadow-lg rounded-lg flex items-center justify-center mx-auto p-2 bg-base-200 border border-gray-200"}>
-                        {chessBoard}
+            <div className={`${isGameStarted ? "" : "hidden"} md:w-3/5 w-full h-full flex`}>
+                <div className={`h-full w-full mx-auto flex flex-col items-center justify-center py-8 md:py-0`}>
+                    <div className={`w-full max-w-sm lg:max-w-md 2xl:max-w-lg ${isGameStarted ? "justify-start md:justify-between" : "justify-center"} w-full flex flex-col items-center gap-2`}>
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={user?.id === whitePlayer?.id ? blackPlayer : whitePlayer}/>
+                        <div className={"w-full max-w-sm lg:max-w-md 2xl:max-w-lg aspect-square shadow-lg rounded-lg flex items-center justify-center mx-auto p-2 bg-base-200 border border-gray-200"}>
+                            {chessBoard}
+                        </div>
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={user?.id === whitePlayer?.id ? whitePlayer : blackPlayer}/>
                     </div>
-                    <GamePlayerInfo isGameStarted={isGameStarted} player={user?.id === whitePlayer?.id ? whitePlayer : blackPlayer}/>
                 </div>
             </div>
-            <div className={`w-full h-full md:w-2/5 ${isGameStarted ? "hidden" : ""} md:flex`}>
-                <div className="flex flex-col justify-between p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto h-full">
+            <div className={`w-full h-full md:w-2/5 ${isGameStarted ? "hidden" : ""} md:flex max-h-[40rem] md:max-h-full`}>
+                <div className="flex flex-col justify-between p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto h-full w-full">
                     {gamePanel}
                 </div>
             </div>

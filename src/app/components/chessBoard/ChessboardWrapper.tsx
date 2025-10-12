@@ -79,7 +79,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         return true;
     }, [chessEngine]);
 
-
     const onSquareClick = useCallback(({square, piece}: { square: Square; piece?: string }) => {
         if (!moveFrom && piece && canPlay) {
             const hasMoveOptions = getMoveOptions(square);
@@ -117,7 +116,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         setMoveFrom(null);
         setOptionSquares({});
     }, [moveFrom, chessEngine, getMoveOptions, updatePosition, makeBotMove, isOnline, onMove, canPlay]);
-
 
     const onPieceDrop = useCallback(({sourceSquare, targetSquare}: { sourceSquare: Square; targetSquare: string }) => {
         if (!targetSquare) return false;
@@ -178,7 +176,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     };
 
     const position = (boardState ?? chessPosition).split(" ")[0];
-
     if (!isStatic) {
         Object.assign(chessboardOptions, {
             onSquareClick,

@@ -27,10 +27,8 @@ export default function HomePage() {
     }
 
     return (
-        <div className={`${session?.user ? "h-full" : "h-screen"}`} id={"main-content"}>
-            <section className={"h-full flex flex-col gap-8 pb-40 px-2 md:px-8"}>
-                {session?.user ? <Dashboard/> : <DisconnectedHome/>}
-            </section>
-        </div>
+        <section className={`${session?.user ? "h-full" : "h-screen"} flex flex-col items-center justify-center p-4`}>
+            {session?.user ? <Dashboard/> : <DisconnectedHome/>}
+        </section>
     );
 }

@@ -31,7 +31,7 @@ const GameJoin = () => {
     return (
         <form className="flex flex-col justify-between h-full" onSubmit={handleSubmit}>
             <div className={"flex flex-col gap-6"}>
-                <div className="text-2xl font-bold mb-1 text-center">Rejoindre une partie</div>
+                <h1 className="text-3xl font-bold text-center mb-2">Rejoindre une partie</h1>
                 <GameJoinField code={code} setCode={setCode}/>
                 {error && <div className="text-red-500 text-center text-sm mt-2">{error}</div>}
             </div>

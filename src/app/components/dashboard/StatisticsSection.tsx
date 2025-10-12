@@ -28,7 +28,7 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
     const favoriteModeCount = favoriteMode[favoriteModeKey] || 0;
 
     return (
-        <div className="bg-base-200 rounded-xl shadow p-6 h-full max-h-[32rem]">
+        <div className="bg-base-200 rounded-xl shadow p-6 h-full xl:max-h-[32rem]">
             <h2 className="text-lg font-bold mb-4">Statistiques</h2>
             <ul className="list rounded-box">
                 <li className="list-row">

@@ -31,10 +31,11 @@ const Dashboard = () => {
     if (loading) return <FullScreenLoader/>;
 
     return (
-        <>
+        <div className="w-full h-full min-h-screen flex flex-col">
             <Topbar/>
+
             <div className="w-full h-full p-4 flex flex-col gap-6">
-                <h1 className="text-4xl font-bold tracking-wider text-primary">Bienvenue sur Checkmate</h1>
+                <h1 className="text-xl xl:text-4xl font-bold tracking-wider text-primary">Bienvenue sur Checkmate</h1>
                 {/* Bandeau principal en haut */}
                 <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
                     <TopSection user={user}/>
@@ -43,11 +44,11 @@ const Dashboard = () => {
 
                 {/* Section principale en dessous */}
                 <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
-                    <div className="grid grid-cols-1 2xl:grid-cols-4 grid-rows-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-4">
                         <GameHistorySection gameHistory={gameHistory} user={user}/>
                         <GamesInProgressSection gameHistory={gameHistory} user={user}/>
 
-                        <div className="col-span-2 row-span-1 lg:hidden block">
+                        <div className="col-span-4 row-span-1 lg:hidden block">
                             <StatisticsSection gameHistory={gameHistory} user={user}/>
                         </div>
                     </div>
@@ -57,7 +58,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 

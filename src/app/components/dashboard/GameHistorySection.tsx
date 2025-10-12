@@ -4,14 +4,14 @@ import {Svg} from "@/app/utils/Svg";
 function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     if (!gameHistory || gameHistory.length === 0) {
         return (
-            <div className="bg-base-200 rounded-xl shadow p-6 h-full col-span-3 row-span-2">
+            <div className="bg-base-200 rounded-xl shadow p-6 h-full col-span-4 xl:col-span-3 row-span-2">
                 <h2 className="text-lg font-bold mb-4">Historique des parties</h2>
                 <p>Aucune partie jouée pour l'instant.</p>
             </div>
         );
     }
     return (
-        <div className="bg-base-200 rounded-xl shadow p-6 h-full overflow-x-auto col-span-3 row-span-2 max-h-[32rem]">
+        <div className="bg-base-200 rounded-xl shadow p-6 h-full overflow-x-auto col-span-4 xl:col-span-3 row-span-2 max-h-[32rem]">
             <h2 className="text-lg font-bold mb-4">Historique des parties</h2>
             <table className="min-w-full text-sm table table-zebra text-center bg-base-100">
                 <thead>

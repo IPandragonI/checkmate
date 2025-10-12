@@ -1,6 +1,6 @@
 "use client";
 
-import {Bell, Menu} from "lucide-react";
+import {Bell} from "lucide-react";
 import Link from "next/link";
 import {useSession, signOut} from "@/lib/auth-client";
 import Swal from 'sweetalert2'
@@ -27,13 +27,11 @@ export default function Topbar() {
     }
 
     return (
-        <div className="w-full flex justify-between items-center p-2 lg:p-4">
-            <div className={"hidden lg:block"}></div>
-
+        <div className="w-full flex justify-end items-center p-2 lg:p-4">
             <div className="flex items-center justify-end gap-4 p-4">
-                {/*<button className="btn btn-circle" aria-label="Notifications">*/}
-                {/*    <Bell size={24}/>*/}
-                {/*</button>*/}
+                <button className="btn btn-circle" aria-label="Notifications">
+                    <Bell size={24}/>
+                </button>
                 {user && (
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn avatar rounded-full gap-4">

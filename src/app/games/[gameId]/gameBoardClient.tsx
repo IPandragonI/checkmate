@@ -18,7 +18,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const user = session?.user;
     const router = useRouter();
 
-    const [socket, setSocket] = useState<any>(null);
+    const socketRef = useRef<any>(null);
     const [waiting, setWaiting] = useState(true);
     const [playerWhite, setPlayerWhite] = useState(game.playerWhite);
     const [playerBlack, setPlayerBlack] = useState(game.playerBlack);
@@ -32,25 +32,45 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const isBotGame = !!game.botId;
     const chess = useRef(new Chess(game.fen || DEFAULT_POSITION));
 
+    let orientation: "white" | "black" = "white";
+    if (user?.id === playerBlack?.id) orientation = "black";
+    if (user?.id === playerWhite?.id) orientation = "white";
+
+    const currentTurn = boardState.split(" ")[1] === "w" ? playerWhite?.id : playerBlack?.id;
+    const canPlay = user?.id === currentTurn;
+    const isReconnecting = game.status === "IN_PROGRESS" && (user?.id === playerWhite?.id || user?.id === playerBlack?.id) && (!socketRef.current || waiting) && !isBotGame;
+
     useEffect(() => {
         if (!user?.id || isBotGame) return;
+        if (socketRef.current) return;
         const socket = getSocket(user.id);
-        setSocket(socket);
+        socketRef.current = socket;
+
         socket.emit("join", {gameId: game.id, userId: user.id});
         socket.on("move", (move) => {
+            console.log("Reçu move:", move);
             setBoardState(move.fen);
             setMoveNumber(move.moveNumber);
             chess.current.move(move);
             setMoves((prevMoves) => [...prevMoves, move]);
-
             if (chess.current.isGameOver()) {
-                handleGameOver({chess: chess.current, playerWhite, playerBlack, moves: [...moves, move], chatMessages, gameId: game.id, router});
+                handleGameOver({
+                    chess: chess.current,
+                    playerWhite,
+                    playerBlack,
+                    moves: [...moves, move],
+                    chatMessages,
+                    gameId: game.id,
+                    router
+                });
             }
         });
         socket.on("waiting", () => {
+            console.log("En attente...");
             setWaiting(true);
         });
         socket.on("start", (data) => {
+            console.log("Début de partie:", data);
             setWaiting(false);
             setPlayerWhite(data.playerWhite);
             setPlayerBlack(data.playerBlack);
@@ -69,11 +89,24 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 setMoveNumber(data.moves.length);
                 setMoves(data.moves);
             }
-
             if (!matchAnnouncementShown) {
                 setShowMatchAnnouncement(true);
                 setMatchAnnouncementShown(true);
             }
+        });
+        socket.on("gameOver", (data) => {
+            console.log("Fin de partie:", data);
+            setBoardState(data.fen);
+            chess.current.load(data.fen);
+            handleGameOver({
+                chess: chess.current,
+                playerWhite,
+                playerBlack,
+                moves,
+                chatMessages,
+                gameId: game.id,
+                router
+            });
         });
         return () => {
             socket.off("move");
@@ -81,38 +114,13 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             socket.off("waiting");
             socket.off("start");
         };
-    }, [game.id, isBotGame, user?.id]);
+    }, [user?.id, game.id, isBotGame]);
 
     useEffect(() => {
         if (game.fen) {
             chess.current.load(game.fen);
         }
     }, [game.fen]);
-
-    let orientation: "white" | "black" = "white";
-    if (user?.id === playerBlack?.id) orientation = "black";
-    if (user?.id === playerWhite?.id) orientation = "white";
-
-    const handleMove = (move: Move) => {
-        if (isBotGame) return;
-        const nextMoveNumber = moveNumber + 1;
-        chess.current.move(move);
-        setBoardState(chess.current.fen());
-        setMoveNumber(nextMoveNumber);
-        setMoves([...moves, {...move, number: nextMoveNumber}]);
-        socket.emit("move", {
-            gameId: game.id,
-            move: {
-                ...move,
-                moveNumber: nextMoveNumber,
-            },
-        });
-    };
-
-    const currentTurn = boardState.split(" ")[1] === "w" ? playerWhite?.id : playerBlack?.id;
-    const canPlay = user?.id === currentTurn;
-
-    const isReconnecting = game.status === "IN_PROGRESS" && (user?.id === playerWhite?.id || user?.id === playerBlack?.id) && (!socket || waiting) && !isBotGame;
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
@@ -135,6 +143,24 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
         };
     }, [playerBlack?.username, playerWhite?.username, showMatchAnnouncement]);
 
+    const handleMove = (move: Move) => {
+        if (isBotGame) return;
+        const nextMoveNumber = moveNumber + 1;
+        chess.current.move(move);
+        setBoardState(chess.current.fen());
+        setMoveNumber(nextMoveNumber);
+        setMoves([...moves, {...move, number: nextMoveNumber}]);
+        if (socketRef.current) {
+            console.log("Envoi move:", move);
+            socketRef.current.emit("move", {
+                gameId: game.id,
+                move: {
+                    ...move,
+                    moveNumber: nextMoveNumber,
+                },
+            });
+        }
+    };
 
     const chessboardWrapper =
         <ChessboardWrapper
@@ -149,7 +175,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
 
     const gamePanel =
         <GameInfos
-            socket={!isBotGame ? socket : undefined}
+            socket={!isBotGame ? socketRef.current : undefined}
             game={game}
             playerWhite={playerWhite}
             playerBlack={playerBlack}
@@ -159,7 +185,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             isReconnecting={isReconnecting}
         />
 
-    if (!isBotGame && waiting && !isReconnecting) {
+    if (!isBotGame && !isReconnecting && waiting) {
         return (
             <GameLayout gamePanel={<GameWaiting value={game.code}/>}/>
         )
@@ -168,6 +194,8 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             <GameLayout chessBoard={chessboardWrapper} gamePanel={gamePanel} isGameStarted={true}/>
         )
     }
+
+    //TODO Réfléchir sincèrement au gameflow pour éviter les scintillements et avoir une expérience plus fluide
 };
 
 export default GameBoardClient;

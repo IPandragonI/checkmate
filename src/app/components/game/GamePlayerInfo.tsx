@@ -14,7 +14,7 @@ const GamePlayerInfo = ({isGameStarted = false, player = null, piecesTaken = []}
                     <Image src={player.image} alt={player.username} className="w-8 h-8 rounded-full object-cover"/>
                 ) : (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-4xl text-gray-400">?</span>
+                        <span className="text-xl text-gray-400">?</span>
                     </div>
                 )}
                 <div className="flex flex-col">
