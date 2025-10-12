@@ -1,6 +1,6 @@
 import {Component} from "react";
 import ColorCard from "@/app/components/field/ColorCard";
-import Svg from "@/app/utils/Svg";
+import {Svg} from "@/app/utils/Svg";
 import {Dices} from "lucide-react";
 
 class StartColorField extends Component<{

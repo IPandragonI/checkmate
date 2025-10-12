@@ -1,7 +1,7 @@
 import React from "react";
-import Svg from "@/app/utils/Svg";
+import {FilledSvg} from "@/app/utils/Svg";
 
-export function getCustomPieces(squareSize: number) {
+export function getCustomPieces() {
     const pieceNames = [
         'wP', 'wN', 'wB', 'wR', 'wQ', 'wK',
         'bP', 'bN', 'bB', 'bR', 'bQ', 'bK'
@@ -10,16 +10,15 @@ export function getCustomPieces(squareSize: number) {
     pieceNames.forEach(piece => {
         components[piece] = () => (
             <div style={{
-                width: squareSize,
-                height: squareSize,
+                width: "80%",
+                height: "80%",
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
             }}>
-                <Svg src={`/pieces/${piece}.svg`} width={squareSize-14} height={squareSize-14} style={{objectFit: 'cover'}} alt={piece}/>
+                <FilledSvg src={`/pieces/${piece}.svg`} alt={piece} style={{objectFit: 'cover'}} />
             </div>
         );
     });
     return components;
 }
-

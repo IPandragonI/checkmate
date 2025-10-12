@@ -1,5 +1,5 @@
 import {timeModes} from "@/app/components/field/TimeModeField";
-import Svg from "@/app/utils/Svg";
+import {Svg} from "@/app/utils/Svg";
 
 function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     if (!gameHistory || gameHistory.length === 0) {

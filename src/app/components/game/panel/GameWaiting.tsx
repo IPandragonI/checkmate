@@ -4,11 +4,11 @@ import {Component} from "react";
 
 function GameWaiting({value}: { value: string }) {
     return (
-        <>
+        <div>
             <div className="text-2xl font-semibold mb-4">En attente d&#39;un adversaire...</div>
             <GameCodeField value={value}/>
             <Loader/>
-        </>
+        </div>
     );
 }
 

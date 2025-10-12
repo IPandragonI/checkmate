@@ -1,9 +1,8 @@
 import Link from "next/link";
 import {APP_TITLE} from "@/lib/constants";
-import {Crown, Swords, UsersRound} from 'lucide-react';
+import {Crown, Menu, Swords, UsersRound} from 'lucide-react';
 
-
-export default function Sidebar({children}: { children: React.ReactNode }) {
+function Sidebar({children}: { children: React.ReactNode }) {
     const menuItems = [
         {name: "Créer une partie", href: "/games/create", icon: Swords},
         {name: "Rejoindre une partie", href: "/games/join", icon: UsersRound},
@@ -21,7 +20,7 @@ export default function Sidebar({children}: { children: React.ReactNode }) {
                     <li>
                         <Link className="flex items-center justify-center py-2" href="/">
                             <Crown className="inline-block mr-2 text-primary/80" size={28}/>
-                            <span className="text-2xl font-extrabold text-primary tracking-wide">Checkmate</span>
+                            <span className="text-2xl font-extrabold text-primary tracking-wide">{APP_TITLE}</span>
                         </Link>
                     </li>
                     <div className="divider my-2"></div>
@@ -39,3 +38,13 @@ export default function Sidebar({children}: { children: React.ReactNode }) {
         </aside>
     );
 }
+
+const MenuOpener = () => (
+    <div className={"absolute top-2 left-2 z-50"}>
+        <label htmlFor="my-drawer-2" className="btn btn-ghost drawer-button lg:hidden">
+            <Menu size={20}/>
+        </label>
+    </div>
+);
+
+export {Sidebar, MenuOpener};

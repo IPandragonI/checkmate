@@ -28,9 +28,6 @@ export default function Topbar() {
 
     return (
         <div className="w-full flex justify-between items-center p-2 lg:p-4">
-            <label htmlFor="my-drawer-2" className="btn btn-ghost drawer-button lg:hidden">
-                <Menu size={20}/>
-            </label>
             <div className={"hidden lg:block"}></div>
 
             <div className="flex items-center justify-end gap-4 p-4">

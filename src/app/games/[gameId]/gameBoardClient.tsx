@@ -10,36 +10,8 @@ import Swal from "sweetalert2";
 import GameLayout from "@/app/components/game/GameLayout";
 import GameWaiting from "@/app/components/game/panel/GameWaiting";
 import {useRouter} from "next/navigation";
-import {GameResult} from "@prisma/client";
-
-function getGameResultString(result: GameResult): string {
-    switch (result) {
-        case GameResult.WHITE_WIN:
-            return "Victoire des Blancs";
-        case GameResult.BLACK_WIN:
-            return "Victoire des Noirs";
-        case GameResult.STALEMATE:
-            return "Pat";
-        case GameResult.REPETITION:
-            return "Répétition";
-        default:
-            return "Nulle";
-    }
-}
-
-interface GameOverHandlerProps {
-    chess: Chess;
-    playerWhite: any;
-    playerBlack: any;
-    moves: any[];
-    chatMessages: any[];
-    gameId: string;
-    router: any;
-}
-
-interface GameBoardClientProps {
-    game: any;
-}
+import {handleGameOver} from "../utils/gameUtils";
+import {GameBoardClientProps} from "../types/gameTypes";
 
 const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const {data: session} = useSession();
@@ -70,26 +42,11 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             setMoveNumber(move.moveNumber);
             chess.current.move(move);
             setMoves((prevMoves) => [...prevMoves, move]);
-        });
-        socket.on("gameOver", async (data) => {
-            const resultString = getGameResultString(data.result);
-            const winner = data.result === "WHITE_WIN" ? playerWhite : data.result === "BLACK_WIN" ? playerBlack : null;
-            setTimeout(async () => {
-                await Swal.fire({
-                    title: 'Partie terminée !',
-                    html: `<b>Résultat :</b> ${resultString}<br/><br/><b>Gagnant :</b> ${data.result === "DRAW" ? 'Nulle' : winner?.username || 'Inconnu'}`,
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Rejouer',
-                    cancelButtonText: 'Retour au menu',
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        router.push("create");
-                    } else if (res.isDismissed) {
-                        router.push("/");
-                    }
-                });
-            }, 500);
+
+            if (chess.current.isGameOver() && !isGameOverHandled) {
+                setIsGameOverHandled(true);
+                handleGameOver({chess: chess.current, playerWhite, playerBlack, moves: [...moves, move], chatMessages, gameId: game.id, router});
+            }
         });
         socket.on("waiting", () => {
             setWaiting(true);

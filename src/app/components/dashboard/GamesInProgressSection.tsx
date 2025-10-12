@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {timeModes} from "@/app/components/field/TimeModeField";
-import Svg from "@/app/utils/Svg";
+import {Svg} from "@/app/utils/Svg";
 
 function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     const gamesInProgress = (gameHistory || []).filter(g => g.status == 'IN_PROGRESS' && (g.playerWhiteId === user?.id || g.playerBlackId === user?.id));

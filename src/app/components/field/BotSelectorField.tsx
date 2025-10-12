@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Svg from "@/app/utils/Svg";
+import {Svg} from "@/app/utils/Svg";
 
 interface BotSelectorProps {
     botId: string;

@@ -1,12 +1,12 @@
 "use client";
 
-import Sidebar from "@/app/components/ui/Sidebar";
-import Topbar from "@/app/components/ui/Topbar";
+import {Sidebar, MenuOpener} from "@/app/components/ui/Sidebar";
 import ThemeProvider from "@/app/components/ui/ThemeProvider";
 import {useSession} from "@/lib/auth-client";
 import FullScreenLoader from "@/app/utils/FullScreenLoader";
 import {usePathname, useRouter} from "next/navigation";
 import {useEffect} from "react";
+import {Menu} from "lucide-react";
 
 function AuthGuard({children}: { children: React.ReactNode }) {
     const {data: session, isPending} = useSession();
@@ -42,8 +42,8 @@ function AuthGuard({children}: { children: React.ReactNode }) {
     return (
         <ThemeProvider>
             <Sidebar>
+                <MenuOpener/>
                 <main className="min-h-screen w-full overflow-hidden bg-base-100 text-base-content">
-                    <Topbar/>
                     {children}
                 </main>
             </Sidebar>

@@ -6,6 +6,7 @@ import EloSection from "@/app/components/dashboard/EloSection";
 import GameHistorySection from "@/app/components/dashboard/GameHistorySection";
 import StatisticsSection from "@/app/components/dashboard/StatisticsSection";
 import GamesInProgressSection from "@/app/components/dashboard/GamesInProgressSection";
+import Topbar from "@/app/components/ui/Topbar";
 
 const Dashboard = () => {
     const {data: session, isPending} = useSession();
@@ -30,30 +31,33 @@ const Dashboard = () => {
     if (loading) return <FullScreenLoader/>;
 
     return (
-        <div className="w-full h-full p-4 flex flex-col gap-6">
-            <h1 className="text-4xl font-bold tracking-wider text-primary">Bienvenue sur Checkmate</h1>
-            {/* Bandeau principal en haut */}
-            <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
-                <TopSection user={user}/>
-                <EloSection user={user}/>
-            </div>
+        <>
+            <Topbar/>
+            <div className="w-full h-full p-4 flex flex-col gap-6">
+                <h1 className="text-4xl font-bold tracking-wider text-primary">Bienvenue sur Checkmate</h1>
+                {/* Bandeau principal en haut */}
+                <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
+                    <TopSection user={user}/>
+                    <EloSection user={user}/>
+                </div>
 
-            {/* Section principale en dessous */}
-            <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
-                <div className="grid grid-cols-1 2xl:grid-cols-4 grid-rows-2 gap-4">
-                    <GameHistorySection gameHistory={gameHistory} user={user}/>
-                    <GamesInProgressSection gameHistory={gameHistory} user={user}/>
+                {/* Section principale en dessous */}
+                <div className="w-full grid lg:grid-cols-[3fr_1fr] grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 2xl:grid-cols-4 grid-rows-2 gap-4">
+                        <GameHistorySection gameHistory={gameHistory} user={user}/>
+                        <GamesInProgressSection gameHistory={gameHistory} user={user}/>
 
-                    <div className="col-span-2 row-span-1 lg:hidden block">
+                        <div className="col-span-2 row-span-1 lg:hidden block">
+                            <StatisticsSection gameHistory={gameHistory} user={user}/>
+                        </div>
+                    </div>
+                    {/* Colonne de blocs à droite (visible seulement sur desktop) */}
+                    <div className="flex flex-col gap-4 lg:block hidden">
                         <StatisticsSection gameHistory={gameHistory} user={user}/>
                     </div>
                 </div>
-                {/* Colonne de blocs à droite (visible seulement sur desktop) */}
-                <div className="flex flex-col gap-4 lg:block hidden">
-                    <StatisticsSection gameHistory={gameHistory} user={user}/>
-                </div>
             </div>
-        </div>
+        </>
     );
 }
 
