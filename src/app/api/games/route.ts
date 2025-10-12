@@ -3,7 +3,7 @@ import {getUserFromRequest} from "@/app/api/utils/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest();
     if (!user?.id) {
         return NextResponse.json({error: "Non authentifié"}, {status: 401});
     }

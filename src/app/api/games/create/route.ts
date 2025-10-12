@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
     try {
-        const user = await getUserFromRequest(req);
+        const user = await getUserFromRequest();
         if (!user?.id) {
             return NextResponse.json({error: "Non authentifié"}, {status: 401});
         }

@@ -4,7 +4,7 @@ import {getUserFromRequest} from "@/app/api/utils/auth";
 import {GameStatus} from "@prisma/client";
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ gameId: string }> }) {
-    const user = await getUserFromRequest(request);
+    const user = await getUserFromRequest();
     if (!user?.id) {
         return NextResponse.json({error: "Non authentifié"}, {status: 401});
     }
