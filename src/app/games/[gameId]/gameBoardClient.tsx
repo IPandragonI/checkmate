@@ -43,8 +43,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
             chess.current.move(move);
             setMoves((prevMoves) => [...prevMoves, move]);
 
-            if (chess.current.isGameOver() && !isGameOverHandled) {
-                setIsGameOverHandled(true);
+            if (chess.current.isGameOver()) {
                 handleGameOver({chess: chess.current, playerWhite, playerBlack, moves: [...moves, move], chatMessages, gameId: game.id, router});
             }
         });
