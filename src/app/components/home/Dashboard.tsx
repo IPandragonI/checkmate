@@ -22,7 +22,6 @@ const Dashboard = () => {
             .then(data => {
                 setUser(data.user);
                 setGameHistory(data.gameHistory);
-                console.log(data);
                 setLoading(false);
             });
     }, [session?.user?.id]);

@@ -1,6 +1,6 @@
 import {Svg} from "@/app/utils/Svg";
-import MoveList from "@/app/components/game/MoveList";
-import GameChat from "@/app/components/game/GameChat";
+import MoveList from "@/app/components/game/panel/components/MoveList";
+import GameChat from "@/app/components/game/panel/components/GameChat";
 import Loader from "@/app/utils/Loader";
 
 interface GameInfosProps {

@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Checkmate
 
-## Getting Started
+Checkmate is a turn-based online chess project developed as part of a Master 2 (M2) academic project. The goal of the project was to design and implement a multiplayer, turn-based game using WebSockets for real-time communication, with a focus on reliability (reconnection), persistence and simple AI opponents.
 
-First, run the development server:
+## Technologies
+
+The application is built using a modern TypeScript/React/Next.js stack:
+- Next.js (app router) – React framework for the frontend and server integration
+- Socket.IO – WebSocket-like real-time communication between client and server
+- Prisma + PostgreSQL (or other supported DB) – ORM and persistence for games, moves and chats
+- chess.js – chess rules and FEN handling
+- react-chessboard / chessboard wrapper – board UI
+- BetterAuth – authentication
+- Tailwind CSS – styling
+
+## What is Checkmate?
+
+Checkmate is a simple, turn-based chess application where users can:
+- Create a new game or join an existing game with a code
+- Play online against another human player in real-time
+- Play against built-in bots with configurable difficulty/ELO
+
+## Quick start (development)
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create a database and configure your environment variables (for example in `.env`):
+- DATABASE_URL
+- NEXT_PUBLIC_SOCKET_URL (optional, defaults to http://localhost:3000)
+- BETTER_AUTH_SECRET (your BetterAuth secret key)
+- BETTER_AUTH_URL (your BetterAuth instance URL)
+
+3. Run database migrations and seed (if applicable):
+
+```bash
+npx prisma migrate dev
+npm run seed
+```
+
+4. Start the development server (the project uses a custom `server.js` that integrates Next.js and Socket.IO):
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open your browser at http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Notes:
+- The project exposes a custom server entry (`server.js`) which starts Next.js and a Socket.IO server on the same process. In production you can run `npm run start` after building the app.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure (high level)
 
-## Learn More
+- `src/` – front-end and API routes
+- `server.js` – custom Next.js + Socket.IO server
+- `prisma/` – schema, migrations and seed script
+- `public/` – static assets (pieces, icons, images)
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This repository is provided for academic purposes. If you want to reuse the code publicly, please add a suitable open-source license (e.g. MIT) and attribute the original author.

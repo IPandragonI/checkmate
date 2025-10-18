@@ -11,7 +11,40 @@ const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
 const prisma = new PrismaClient();
 
-const games = {};
+const games = [];
+
+async function startNewGame(gameId, io) {
+    const [player1, player2] = games[gameId];
+    const isPlayer1White = Math.random() < 0.5;
+    const playerWhiteSocket = isPlayer1White ? player1 : player2;
+    const playerBlackSocket = isPlayer1White ? player2 : player1;
+
+    const playerWhiteId = io.sockets.sockets.get(playerWhiteSocket)?.userId;
+    const playerBlackId = io.sockets.sockets.get(playerBlackSocket)?.userId;
+
+    await prisma.game.update({
+        where: {id: gameId},
+        data: {
+            status: "IN_PROGRESS",
+            playerWhiteId,
+            playerBlackId,
+        },
+    });
+
+    const updatedGame = await prisma.game.findUnique({
+        where: {id: gameId},
+        include: {
+            playerWhite: true,
+            playerBlack: true
+        }
+    });
+    debugger
+    io.to(gameId).emit("start", {
+        playerWhite: updatedGame.playerWhite,
+        playerBlack: updatedGame.playerBlack,
+        status: "IN_PROGRESS",
+    });
+}
 
 async function fetchExistingGame(socket, existingGame, gameId, io) {
     if (socket.userId !== existingGame.playerWhiteId && socket.userId !== existingGame.playerBlackId) {
@@ -46,39 +79,6 @@ async function fetchExistingGame(socket, existingGame, gameId, io) {
     });
 }
 
-async function startNewGame(gameId, io) {
-    const [player1, player2] = games[gameId];
-    const isPlayer1White = Math.random() < 0.5;
-    const playerWhiteSocket = isPlayer1White ? player1 : player2;
-    const playerBlackSocket = isPlayer1White ? player2 : player1;
-
-    const playerWhiteId = io.sockets.sockets.get(playerWhiteSocket)?.userId;
-    const playerBlackId = io.sockets.sockets.get(playerBlackSocket)?.userId;
-
-    await prisma.game.update({
-        where: {id: gameId},
-        data: {
-            status: "IN_PROGRESS",
-            playerWhiteId,
-            playerBlackId,
-        },
-    });
-
-    const updatedGame = await prisma.game.findUnique({
-        where: {id: gameId},
-        include: {
-            playerWhite: true,
-            playerBlack: true
-        }
-    });
-
-    io.to(gameId).emit("start", {
-        playerWhite: updatedGame.playerWhite,
-        playerBlack: updatedGame.playerBlack,
-        status: "IN_PROGRESS",
-    });
-}
-
 app.prepare().then(() => {
     const httpServer = createServer(handler);
 
@@ -92,7 +92,9 @@ app.prepare().then(() => {
             credentials: true
         }
     });
+
     io.on("connection", (socket) => {
+
         socket.on("join", async ({gameId, userId}) => {
             socket.join(gameId);
             socket.userId = userId;

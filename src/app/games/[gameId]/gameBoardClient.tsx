@@ -19,6 +19,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
     const router = useRouter();
 
     const socketRef = useRef<any>(null);
+    const listenersAttachedRef = useRef(false);
     const [waiting, setWaiting] = useState(true);
     const [playerWhite, setPlayerWhite] = useState(game.playerWhite);
     const [playerBlack, setPlayerBlack] = useState(game.playerBlack);
@@ -42,12 +43,15 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
 
     useEffect(() => {
         if (!user?.id || isBotGame) return;
-        if (socketRef.current) return;
-        const socket = getSocket(user.id);
-        socketRef.current = socket;
+        let socket = socketRef.current;
+        if (!socket) {
+            socket = getSocket(user.id);
+            socketRef.current = socket;
+        } else if (user.id) {
+            socket.auth = { userId: user.id };
+        }
 
-        socket.emit("join", {gameId: game.id, userId: user.id});
-        socket.on("move", (move) => {
+        const onMove = (move: any) => {
             console.log("Reçu move:", move);
             setBoardState(move.fen);
             setMoveNumber(move.moveNumber);
@@ -64,12 +68,15 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                     router
                 });
             }
-        });
-        socket.on("waiting", () => {
+        };
+
+        const onWaiting = () => {
             console.log("En attente...");
             setWaiting(true);
-        });
-        socket.on("start", (data) => {
+        };
+
+        const onStart = (data: any) => {
+            debugger
             console.log("Début de partie:", data);
             setWaiting(false);
             setPlayerWhite(data.playerWhite);
@@ -93,8 +100,9 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 setShowMatchAnnouncement(true);
                 setMatchAnnouncementShown(true);
             }
-        });
-        socket.on("gameOver", (data) => {
+        };
+
+        const onGameOver = (data: any) => {
             console.log("Fin de partie:", data);
             setBoardState(data.fen);
             chess.current.load(data.fen);
@@ -107,14 +115,44 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
                 gameId: game.id,
                 router
             });
-        });
-        return () => {
-            socket.off("move");
-            socket.off("gameOver");
-            socket.off("waiting");
-            socket.off("start");
         };
-    }, [user?.id, game.id, isBotGame]);
+
+        if (!listenersAttachedRef.current) {
+            socket.on("move", onMove);
+            socket.on("waiting", onWaiting);
+            socket.on("start", onStart);
+            socket.on("gameOver", onGameOver);
+            listenersAttachedRef.current = true;
+        } else {
+            socket.off("move"); socket.on("move", onMove);
+            socket.off("waiting"); socket.on("waiting", onWaiting);
+            socket.off("start"); socket.on("start", onStart);
+            socket.off("gameOver"); socket.on("gameOver", onGameOver);
+        }
+
+        const sendJoin = () => {
+            socket.emit("join", {gameId: game.id, userId: user.id});
+        };
+
+        if (socket.connected) {
+            sendJoin();
+        } else {
+            socket.once("connect", sendJoin);
+        }
+
+        return () => {
+            try {
+                socket.off("move", onMove);
+                socket.off("gameOver", onGameOver);
+                socket.off("waiting", onWaiting);
+                socket.off("start", onStart);
+                socket.off("connect", sendJoin);
+            } catch (e) {
+                console.warn('Error during socket cleanup', e);
+            }
+            listenersAttachedRef.current = false;
+        };
+    }, [user?.id, isBotGame, game.id, playerWhite, playerBlack, moves, chatMessages, matchAnnouncementShown, router]);
 
     useEffect(() => {
         if (game.fen) {

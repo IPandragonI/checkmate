@@ -74,7 +74,7 @@ function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: an
             <div className="stats stats-vertical lg:stats-horizontal shadow w-full bg-base-100 mt-4">
                 <div className="stat">
                     <div className="stat-figure text-primary">
-                        <Heart size={32} className="inline-block"/>
+                        <Heart size={32} className="inline-block" fill="currentColor"/>
                     </div>
                     <div className="stat-title">Mode préféré</div>
                     <div className="stat-value text-primary">{favoriteModeLabel || "N/A"}</div>
