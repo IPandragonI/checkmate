@@ -96,6 +96,9 @@ model Game {
   whiteTimeLeft Int?
   blackTimeLeft Int?
 
+  currentFen String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  capturedPieces Json @default("{\"white\":[],\"black\":[]}")
+
   createdAt  DateTime      @default(now())
   finishedAt DateTime?
   moves      Move[]
@@ -112,8 +115,13 @@ model Move {
   from       String
   to         String
   promotion  String?
+
+  capturedPiece String?
+
   fen        String
   timestamp  DateTime @default(now())
+
+  @@index([gameId, moveNumber])
 }
 
 model ChatMessage {

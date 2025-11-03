@@ -1,4 +1,4 @@
-import React from "react";
+    import React from "react";
 import {Target, Zap, Timer, Clock} from "lucide-react";
 
 export const timeModes = [
@@ -44,7 +44,7 @@ const TimeModeField: React.FC<{ value: string, mode: string, onChange: (e: React
 
     return (
         <div className="form-control flex flex-col gap-2">
-            <label className="label">Mode de temps</label>
+            <div className="label">Mode de temps</div>
             <div className="flex flex-col gap-4 items-center">
                 <div className="grid grid-cols-2 gap-2 w-full">
                     {timeModes.map(m => (

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 
 interface GameChatProps {
     socket?: any;
@@ -18,7 +18,7 @@ const GameChat: React.FC<GameChatProps> = ({socket, gameId, user, chatMessages})
     const [input, setInput] = useState("");
 
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id || !socket) return;
 
         socket.on("messageReceived", (msg: ChatMessage) => {
             setMessages(prev => [...prev, msg]);

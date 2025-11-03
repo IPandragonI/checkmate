@@ -1,4 +1,5 @@
 import {Chess, Square} from "chess.js";
+import {Move} from "@/app/components/chessBoard/ChessboardWrapper";
 
 export class ChessEngine {
     private game: Chess;
@@ -23,20 +24,6 @@ export class ChessEngine {
 
     isGameOver(): boolean {
         return this.game.isGameOver();
-    }
-
-    getGameOverReason(): string | null {
-        if (!this.game.isGameOver()) return null;
-        if (this.game.isCheckmate()) return "checkmate";
-        if (this.game.isStalemate()) return "stalemate";
-        if (this.game.isInsufficientMaterial()) return "insufficient material";
-        if (this.game.isThreefoldRepetition()) return "threefold repetition";
-        if (this.game.isDraw()) return "draw";
-        return "unknown";
-    }
-
-    getPossibleMoves(): string[] {
-        return this.game.moves();
     }
 
     getMovesFrom(square: Square | null) {
@@ -83,9 +70,9 @@ export class ChessEngine {
         return score;
     }
 
-    makeBotMove(): boolean {
+    makeBotMove(): Move | null {
         const possibleMoves = this.game.moves({verbose: true});
-        if (this.isGameOver() || possibleMoves.length === 0) return false;
+        if (this.isGameOver() || possibleMoves.length === 0) return null;
 
         const captures = possibleMoves.filter(m => m.captured);
         const checks = possibleMoves.filter(m => m.flags?.includes('c'));
@@ -115,116 +102,116 @@ export class ChessEngine {
                 chosenMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
             }
             this.game.move(chosenMove);
-            return true;
+            return chosenMove;
         }
 
         if (!this.botElo || this.botElo < 600) {
             if (Math.random() < 0.2 && neutralMoves.length > 0) {
                 const badMove = neutralMoves[Math.floor(Math.random() * neutralMoves.length)];
                 this.game.move(badMove);
-                return true;
+                return badMove;
             }
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             this.game.move(randomMove);
-            return true;
+            return randomMove;
         }
 
         if (this.botElo < 1000) {
             if (captures.length > 0 && Math.random() < 0.7) {
                 const move = captures[Math.floor(Math.random() * captures.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             if (developments.length > 0 && Math.random() < 0.3) {
                 const move = developments[Math.floor(Math.random() * developments.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             if (Math.random() < 0.1 && neutralMoves.length > 0) {
                 const badMove = neutralMoves[Math.floor(Math.random() * neutralMoves.length)];
                 this.game.move(badMove);
-                return true;
+                return badMove;
             }
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             this.game.move(randomMove);
-            return true;
+            return randomMove;
         }
 
         if (this.botElo < 1400) {
             if (promotions.length > 0 && Math.random() < 0.5) {
                 const move = promotions[Math.floor(Math.random() * promotions.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             if (captures.length > 0 && Math.random() < 0.7) {
                 const move = captures[Math.floor(Math.random() * captures.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             if (checks.length > 0 && Math.random() < 0.4) {
                 const move = checks[Math.floor(Math.random() * checks.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             if (developments.length > 0 && Math.random() < 0.5) {
                 const move = developments[Math.floor(Math.random() * developments.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             const goodMoves = [...captures, ...checks, ...developments];
             if (goodMoves.length > 0) {
                 const move = goodMoves[Math.floor(Math.random() * goodMoves.length)];
                 this.game.move(move);
-                return true;
+                return move;
             }
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             this.game.move(randomMove);
-            return true;
+            return randomMove;
         }
 
         if (this.botElo < 1800) {
             if (promotions.length > 0) {
                 this.game.move(promotions[0]);
-                return true;
+                return promotions[0];
             }
             if (captures.length > 0) {
                 this.game.move(captures[0]);
-                return true;
+                return captures[0];
             }
             if (checks.length > 0) {
                 this.game.move(checks[0]);
-                return true;
+                return checks[0];
             }
             if (developments.length > 0) {
                 this.game.move(developments[0]);
-                return true;
+                return developments[0];
             }
             this.game.move(possibleMoves[0]);
-            return true;
+            return possibleMoves[0];
         }
 
         if (promotions.length > 0) {
             this.game.move(promotions[0]);
-            return true;
+            return promotions[0];
         }
         if (captures.length > 0) {
             this.game.move(captures[0]);
-            return true;
+            return captures[0];
         }
         if (checks.length > 0) {
             this.game.move(checks[0]);
-            return true;
+            return checks[0];
         }
         if (developments.length > 0) {
             this.game.move(developments[0]);
-            return true;
+            return developments[0];
         }
         if (attacks.length > 0) {
             this.game.move(attacks[0]);
-            return true;
+            return attacks[0];
         }
         this.game.move(possibleMoves[0]);
-        return true;
+        return possibleMoves[0];
     }
 
     getPiece(square: Square) {

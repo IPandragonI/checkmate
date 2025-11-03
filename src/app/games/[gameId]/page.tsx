@@ -1,8 +1,8 @@
-import {PrismaClient} from "@prisma/client";
 import React from "react";
 import GameBoardClient from "@/app/games/[gameId]/gameBoardClient";
+import {GameService} from "@/server/services/gameServices";
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export default async function GamePage({params}: { params: { gameId: string } }) {
     params = await params;
@@ -11,20 +11,13 @@ export default async function GamePage({params}: { params: { gameId: string } })
         return <div className="p-8 text-center text-red-500">Paramètre de partie manquant</div>;
     }
 
-    const game = await prisma.game.findUnique({
-        where: {id: gameId},
-        include: {
-            playerWhite: true,
-            playerBlack: true,
-            bot: true,
-        },
-    });
+    const game = await GameService.getGameState(gameId);
 
     if (!game) {
         return <div className="p-8 text-center text-red-500">Partie introuvable</div>;
     }
 
     return (
-        <GameBoardClient game={game}/>
+        <GameBoardClient initialGame={game} />
     );
 }

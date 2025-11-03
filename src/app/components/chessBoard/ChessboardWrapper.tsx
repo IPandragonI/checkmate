@@ -1,193 +1,242 @@
 "use client";
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Chessboard} from "react-chessboard";
-import {ChessEngine} from "@/app/components/chessBoard/ChessEngine";
-import {getCustomPieces} from "@/app/components/chessBoard/CustomPieces";
-import {getBoardStyles} from "@/app/components/chessBoard/ChessOptions";
-import {Square} from "chess.js";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Chessboard } from "react-chessboard";
+import { ChessEngine } from "@/app/components/chessBoard/ChessEngine";
+import { getCustomPieces } from "@/app/components/chessBoard/CustomPieces";
+import { getBoardStyles } from "@/app/components/chessBoard/ChessOptions";
+import { Square } from "chess.js";
 
 export interface Move {
     from: string;
     to: string;
     promotion?: string;
     fen?: string | null;
-    number?: number;
 }
 
 interface ChessboardWrapperProps {
     boardOrientation?: "white" | "black";
     botElo?: number;
-    isStatic?: boolean;
+
     isOnline?: boolean;
-    onMove?: ((move: Move) => void) | null;
+    onMove?: (move: Move) => void;
     boardState?: string;
     canPlay?: boolean;
-}
 
+    isStatic?: boolean;
+    isBotTurn?: boolean;
+}
 
 const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  boardOrientation = "white",
                                                                  botElo,
-                                                                 isStatic = true,
                                                                  isOnline = false,
-                                                                 onMove = null,
+                                                                 onMove,
                                                                  boardState,
                                                                  canPlay = true,
+                                                                 isStatic = true, 
+                                                                 isBotTurn = false,
                                                              }) => {
-    const chessEngineRef = useRef<ChessEngine>(new ChessEngine(undefined, botElo));
+
+    const isBotMode = !isOnline && !!botElo && !isStatic;
+    const isOnlineMode = isOnline && !isStatic;
+
+    const chessEngineRef = useRef<ChessEngine>(new ChessEngine(boardState, botElo));
     const chessEngine = chessEngineRef.current;
 
-    const [chessPosition, setChessPosition] = useState<string>(chessEngine.getFen());
     const [moveFrom, setMoveFrom] = useState<Square | null>(null);
     const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
 
     const pieceComponents = getCustomPieces();
     const boardStyles = getBoardStyles();
+    
+    useEffect(() => {
+        if (boardState) chessEngine.setFen(boardState);
+    }, [boardState, chessEngine]);
 
-    const updatePosition = useCallback(() => {
-        setChessPosition(chessEngine.getFen());
-    }, [chessEngine]);
+    useEffect(() => {
+        if (isBotMode) {
+            chessEngine.setBotElo(botElo);
+        }
+    }, [botElo, isBotMode, chessEngine]);
 
     const makeBotMove = useCallback(() => {
-        if (chessEngine.makeBotMove()) {
-            updatePosition();
-        }
-    }, [chessEngine, updatePosition]);
+        if (!isBotMode) return;
 
-    const getMoveOptions = useCallback((square: Square) => {
-        const moves = chessEngine.getMovesFrom(square);
-        if (moves.length === 0) {
-            setOptionSquares({});
-            return false;
+        setTimeout(() => {
+            const botMove = chessEngine.makeBotMove();
+            if (botMove !== null) {
+                setOptionSquares({});
+                if (onMove) {
+                    onMove({
+                        from: botMove.from,
+                        to: botMove.to,
+                        promotion: botMove.promotion,
+                        fen: botMove.fen,
+                    });
+                }
+            }
+        }, 500);
+    }, [isBotMode, chessEngine, onMove]);
+
+    useEffect(() => {
+        if (isBotMode && isBotTurn) {
+            makeBotMove();
         }
-        const newSquares: Record<string, React.CSSProperties> = {};
-        for (const move of moves) {
-            newSquares[move.to] = {
-                background:
+    }, [isBotMode, makeBotMove, isBotTurn]);
+
+    const getMoveOptions = useCallback(
+        (square: Square) => {
+            const moves = chessEngine.getMovesFrom(square);
+            if (moves.length === 0) {
+                setOptionSquares({});
+                return false;
+            }
+
+            const newSquares: Record<string, React.CSSProperties> = {};
+
+            for (const move of moves) {
+                const isCapture =
                     chessEngine.getPiece(move.to) &&
-                    chessEngine.getPiece(move.to)?.color !== chessEngine.getPiece(square)?.color
+                    chessEngine.getPiece(move.to)?.color !== chessEngine.getPiece(square)?.color;
+
+                newSquares[move.to] = {
+                    background: isCapture
                         ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
                         : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
-                borderRadius: "50%",
-            };
-        }
-        newSquares[square] = {
-            background: "rgba(255, 255, 0, 0.4)",
-        };
-        setOptionSquares(newSquares);
-        return true;
-    }, [chessEngine]);
+                    borderRadius: "50%",
+                };
+            }
 
-    const onSquareClick = useCallback(({square, piece}: { square: Square; piece?: string }) => {
-        if (!moveFrom && piece && canPlay) {
-            const hasMoveOptions = getMoveOptions(square);
-            if (hasMoveOptions) setMoveFrom(square);
-            return;
-        }
-        if (!moveFrom) return;
-        const moves = chessEngine.getMovesFrom(moveFrom);
-        const foundMove = moves.find((m) => m.from === moveFrom && m.to === square);
-        if (!foundMove) {
-            const hasMoveOptions = getMoveOptions(square);
-            setMoveFrom(hasMoveOptions ? square : null);
-            return;
-        }
-        if (isOnline && onMove) {
-            if (!canPlay) {
+            newSquares[square] = {
+                background: "rgba(255, 255, 0, 0.4)",
+            };
+
+            setOptionSquares(newSquares);
+            return true;
+        },
+        [chessEngine]
+    );
+
+    const onSquareClick = useCallback(
+        ({ square, piece }: { square: Square; piece?: string }) => {
+            if (isStatic) return;
+
+            if (isOnlineMode && !canPlay) {
                 setMoveFrom(null);
                 setOptionSquares({});
                 return;
             }
-            onMove({
-                from: moveFrom,
-                to: square,
-                promotion: foundMove.promotion,
-                fen: chessEngine.getFenAfterMove(moveFrom, square, foundMove.promotion),
-            });
-            setMoveFrom(null);
-            setOptionSquares({});
-            return;
-        }
-        if (chessEngine.move(moveFrom, square)) {
-            updatePosition();
-            setTimeout(makeBotMove, 300);
-        }
-        setMoveFrom(null);
-        setOptionSquares({});
-    }, [moveFrom, chessEngine, getMoveOptions, updatePosition, makeBotMove, isOnline, onMove, canPlay]);
 
-    const onPieceDrop = useCallback(({sourceSquare, targetSquare}: { sourceSquare: Square; targetSquare: string }) => {
-        if (!targetSquare) return false;
-        if (isOnline && onMove) {
-            if (!canPlay) {
+            if (!moveFrom && piece) {
+                const hasMoveOptions = getMoveOptions(square);
+                if (hasMoveOptions) setMoveFrom(square);
+                return;
+            }
+
+            if (!moveFrom) return;
+
+            const moves = chessEngine.getMovesFrom(moveFrom);
+            const foundMove = moves.find((m) => m.from === moveFrom && m.to === square);
+
+            if (!foundMove) {
+                const hasMoveOptions = getMoveOptions(square);
+                setMoveFrom(hasMoveOptions ? square : null);
+                return;
+            }
+
+            if (onMove) {
+                const fen = chessEngine.getFenAfterMove(
+                    moveFrom,
+                    square,
+                    foundMove.promotion
+                );
+
+                onMove({
+                    from: moveFrom,
+                    to: square,
+                    promotion: foundMove.promotion,
+                    fen: fen || chessEngine.getFen(),
+                });
+
+                chessEngine.move(moveFrom, square);
+
                 setMoveFrom(null);
                 setOptionSquares({});
+                return;
+            }
+
+            chessEngine.move(moveFrom, square);
+            setMoveFrom(null);
+            setOptionSquares({});
+        },
+        [isStatic, isOnlineMode, canPlay, moveFrom, chessEngine, getMoveOptions, onMove]
+    );
+
+    const onPieceDrop = useCallback(
+        ({ sourceSquare, targetSquare }: { sourceSquare: Square; targetSquare: string }) => {
+            if (isStatic) return false;
+
+            if (isOnlineMode && !canPlay) {
                 return false;
             }
+
+            if (!targetSquare) return false;
+
             const moves = chessEngine.getMovesFrom(sourceSquare);
-            const foundMove = moves.find((m) => m.from === sourceSquare && m.to === targetSquare);
-            if (foundMove) {
+            const foundMove = moves.find(
+                (m) => m.from === sourceSquare && m.to === targetSquare
+            );
+
+            if (!foundMove) return false;
+
+            if (onMove) {
+                const fen = chessEngine.getFenAfterMove(
+                    sourceSquare,
+                    targetSquare,
+                    foundMove.promotion
+                );
+
                 onMove({
                     from: sourceSquare,
                     to: targetSquare,
                     promotion: foundMove.promotion,
-                    fen: chessEngine.getFenAfterMove(sourceSquare, targetSquare, foundMove.promotion),
+                    fen: fen || chessEngine.getFen(),
                 });
+                chessEngine.move(sourceSquare, targetSquare);
+                return true;
             }
-            setMoveFrom(null);
-            setOptionSquares({});
+
             return false;
+        },
+        [isStatic, isOnlineMode, canPlay, chessEngine, onMove]
+    );
+
+    const getCurrentPosition = () => {
+        if (isOnlineMode && boardState) {
+            return boardState.split(" ")[0];
         }
-        if (chessEngine.move(sourceSquare, targetSquare)) {
-            updatePosition();
-            setMoveFrom(null);
-            setOptionSquares({});
-            if (!isOnline && botElo) {
-                setTimeout(makeBotMove, 500);
-            }
-            return true;
-        }
-        return false;
-    }, [chessEngine, updatePosition, isOnline, botElo, onMove, makeBotMove, canPlay]);
+        return chessEngine.getFen().split(" ")[0];
+    };
 
-
-    useEffect(() => {
-        updatePosition();
-    }, [boardOrientation, updatePosition]);
-
-    useEffect(() => {
-        chessEngine.setBotElo(botElo);
-    }, [botElo, chessEngine]);
-
-    useEffect(() => {
-        if (boardState) {
-            chessEngine.setFen(boardState);
-            setChessPosition(chessEngine.getFen());
-        }
-    }, [boardState, chessEngine]);
-
-    const chessboardOptions = {
+    const chessboardOptions: any = {
         ...boardStyles,
         pieces: pieceComponents,
         boardOrientation,
+        position: getCurrentPosition(),
         squareStyles: optionSquares,
-        arePiecesDraggable: false,
+        allowDragging: !isStatic,
     };
 
-    const position = (boardState ?? chessPosition).split(" ")[0];
     if (!isStatic) {
-        Object.assign(chessboardOptions, {
-            onSquareClick,
-            onPieceDrop,
-            position,
-            showAnimations: true,
-        });
+        chessboardOptions.onSquareClick = onSquareClick;
+        chessboardOptions.onPieceDrop = onPieceDrop;
+        chessboardOptions.showAnimations = true;
     }
 
     return (
         <div className="w-full h-full aspect-square flex items-center justify-center">
-            <Chessboard options={chessboardOptions}/>
+            <Chessboard options={chessboardOptions} />
         </div>
     );
 };

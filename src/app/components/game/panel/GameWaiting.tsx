@@ -1,6 +1,5 @@
 import GameCodeField from "@/app/components/field/GameCodeField";
 import Loader from "@/app/utils/Loader";
-import {Component} from "react";
 
 function GameWaiting({value}: { value: string }) {
     return (

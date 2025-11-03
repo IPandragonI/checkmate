@@ -53,7 +53,7 @@ const BotSelectorField: React.FC<BotSelectorProps> = ({botId, setBotId}) => {
                                 <Svg src={l.img} alt={l.name} width={26} height={26} className="mb-2"/>
                             </figure>
                             <div className="card-body p-0 justify-center items-center text-center">
-                                <h2 className="card-title text-sm">{l.name}</h2>
+                                <h2 className={`card-title text-sm ${botId === l.id ? "text-white" : ""}`}>{l.name}</h2>
                             </div>
                             {hovered === l.id && (
                                 <div className="absolute z-20 left-1/2 -translate-x-1/2 -top-10 mt-2 px-3 py-2 rounded bg-base-100 shadow text-xs text-center border border-gray-200 whitespace-nowrap">

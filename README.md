@@ -41,7 +41,7 @@ npx prisma migrate dev
 npm run seed
 ```
 
-4. Start the development server (the project uses a custom `server.js` that integrates Next.js and Socket.IO):
+4. Start the development server (the project uses a custom `server.ts` that integrates Next.js and Socket.IO):
 
 ```bash
 npm run dev
@@ -50,12 +50,12 @@ npm run dev
 5. Open your browser at http://localhost:3000
 
 Notes:
-- The project exposes a custom server entry (`server.js`) which starts Next.js and a Socket.IO server on the same process. In production you can run `npm run start` after building the app.
+- The project exposes a custom server entry (`server.ts`) which starts Next.js and a Socket.IO server on the same process. In production you can run `npm run start` after building the app.
 
 ## Project structure (high level)
 
 - `src/` – front-end and API routes
-- `server.js` – custom Next.js + Socket.IO server
+- `server.ts` – custom Next.js + Socket.IO server
 - `prisma/` – schema, migrations and seed script
 - `public/` – static assets (pieces, icons, images)
 

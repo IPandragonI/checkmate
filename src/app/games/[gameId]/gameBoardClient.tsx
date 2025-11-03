@@ -1,239 +1,253 @@
 "use client";
-import ChessboardWrapper, {Move} from "@/app/components/chessBoard/ChessboardWrapper";
-import {useSession} from "@/lib/auth-client";
-import GameInfos from "@/app/components/game/panel/GameInfos";
-import {useEffect, useState, useRef} from "react";
-import {getSocket} from "@/socket";
-import {DEFAULT_POSITION} from "chess.js";
-import {Chess} from "chess.js";
-import Swal from "sweetalert2";
-import GameLayout from "@/app/components/game/GameLayout";
-import GameWaiting from "@/app/components/game/panel/GameWaiting";
-import {useRouter} from "next/navigation";
-import {handleGameOver} from "../utils/gameUtils";
-import {GameBoardClientProps} from "../types/gameTypes";
 
-const GameBoardClient: React.FC<GameBoardClientProps> = ({game}) => {
-    const {data: session} = useSession();
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Chess } from "chess.js";
+import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { getSocket } from "@/socket";
+import ChessboardWrapper from "@/app/components/chessBoard/ChessboardWrapper";
+import GameInfos from "@/app/components/game/panel/GameInfos";
+import GameWaiting from "@/app/components/game/panel/GameWaiting";
+import GameLayout from "@/app/components/game/GameLayout";
+import { GameState, Move, Player } from "@/app/types/game";
+import Swal from "sweetalert2";
+import {GameService} from "@/server/services/gameServices";
+// IMPORTANT: ne pas importer de services serveur (ex: GameService) dans un composant client
+// Utiliser à la place des endpoints API server-side (par ex. POST /api/games/[gameId]/move)
+
+interface GameBoardClientProps {
+    initialGame: GameState;
+}
+
+const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
+    const { data: session } = useSession();
     const user = session?.user;
     const router = useRouter();
 
-    const socketRef = useRef<any>(null);
-    const listenersAttachedRef = useRef(false);
-    const [waiting, setWaiting] = useState(true);
-    const [playerWhite, setPlayerWhite] = useState(game.playerWhite);
-    const [playerBlack, setPlayerBlack] = useState(game.playerBlack);
-    const [moveNumber, setMoveNumber] = useState(0);
-    const [boardState, setBoardState] = useState(game.fen || DEFAULT_POSITION);
-    const [moves, setMoves] = useState<Move[]>([]);
-    const [chatMessages, setChatMessages] = useState<any[]>([]);
+    const [gameState, setGameState] = useState<GameState>(initialGame);
+    const [waiting, setWaiting] = useState(initialGame.status === "WAITING");
     const [showMatchAnnouncement, setShowMatchAnnouncement] = useState(false);
-    const [matchAnnouncementShown, setMatchAnnouncementShown] = useState(false);
 
-    const isBotGame = !!game.botId;
-    const chess = useRef(new Chess(game.fen || DEFAULT_POSITION));
+    const socketRef = useRef<any>(null);
+    const chessRef = useRef(new Chess(initialGame.currentFen));
 
-    let orientation: "white" | "black" = "white";
-    if (user?.id === playerBlack?.id) orientation = "black";
-    if (user?.id === playerWhite?.id) orientation = "white";
+    const isBotGame = !!initialGame.bot;
+    const isOnlineGame = !isBotGame;
 
-    const currentTurn = boardState.split(" ")[1] === "w" ? playerWhite?.id : playerBlack?.id;
+    const orientation: "white" | "black" = user?.id === gameState.playerBlack?.id ? "black" : "white";
+
+    const currentTurn = chessRef.current.turn() === "w"
+        ? gameState.playerWhite?.id ? gameState.playerWhite?.id : initialGame.bot?.id
+        : gameState.playerBlack?.id ? gameState.playerBlack?.id : initialGame.bot?.id;
     const canPlay = user?.id === currentTurn;
-    const isReconnecting = game.status === "IN_PROGRESS" && (user?.id === playerWhite?.id || user?.id === playerBlack?.id) && (!socketRef.current || waiting) && !isBotGame;
 
     useEffect(() => {
         if (!user?.id || isBotGame) return;
-        let socket = socketRef.current;
-        if (!socket) {
-            socket = getSocket(user.id);
-            socketRef.current = socket;
-        } else if (user.id) {
-            socket.auth = { userId: user.id };
-        }
 
-        const onMove = (move: any) => {
-            console.log("Reçu move:", move);
-            setBoardState(move.fen);
-            setMoveNumber(move.moveNumber);
-            chess.current.move(move);
-            setMoves((prevMoves) => [...prevMoves, move]);
-            if (chess.current.isGameOver()) {
-                handleGameOver({
-                    chess: chess.current,
-                    playerWhite,
-                    playerBlack,
-                    moves: [...moves, move],
-                    chatMessages,
-                    gameId: game.id,
-                    router
-                });
-            }
-        };
+        const socket = getSocket(user.id);
+        socketRef.current = socket;
 
         const onWaiting = () => {
-            console.log("En attente...");
+            console.log("Waiting for opponent...");
             setWaiting(true);
         };
 
-        const onStart = (data: any) => {
-            debugger
-            console.log("Début de partie:", data);
+        const onStart = (data: {
+            playerWhite: Player;
+            playerBlack: Player;
+            gameState: GameState;
+        }) => {
+            console.log("Game started:", data);
             setWaiting(false);
-            setPlayerWhite(data.playerWhite);
-            setPlayerBlack(data.playerBlack);
-            setChatMessages(data.chatMessages || []);
-            chess.current.load(data.fen || DEFAULT_POSITION);
-            if (data.moves && Array.isArray(data.moves) && data.moves.length > 0) {
-                chess.current.reset();
-                data.moves.forEach((move: any) => {
-                    chess.current.move({
-                        from: move.from || move.from,
-                        to: move.to || move.to,
-                        promotion: move.promotion || undefined,
-                    });
+            setGameState(data.gameState);
+
+            const chess = new Chess();
+            data.gameState.moves.forEach((move) => {
+                chess.move({
+                    from: move.from,
+                    to: move.to,
+                    promotion: move.promotion,
                 });
-                setBoardState(chess.current.fen());
-                setMoveNumber(data.moves.length);
-                setMoves(data.moves);
-            }
-            if (!matchAnnouncementShown) {
-                setShowMatchAnnouncement(true);
-                setMatchAnnouncementShown(true);
-            }
-        };
-
-        const onGameOver = (data: any) => {
-            console.log("Fin de partie:", data);
-            setBoardState(data.fen);
-            chess.current.load(data.fen);
-            handleGameOver({
-                chess: chess.current,
-                playerWhite,
-                playerBlack,
-                moves,
-                chatMessages,
-                gameId: game.id,
-                router
             });
+            chessRef.current = chess;
+
+            setShowMatchAnnouncement(true);
         };
 
-        if (!listenersAttachedRef.current) {
-            socket.on("move", onMove);
-            socket.on("waiting", onWaiting);
-            socket.on("start", onStart);
-            socket.on("gameOver", onGameOver);
-            listenersAttachedRef.current = true;
-        } else {
-            socket.off("move"); socket.on("move", onMove);
-            socket.off("waiting"); socket.on("waiting", onWaiting);
-            socket.off("start"); socket.on("start", onStart);
-            socket.off("gameOver"); socket.on("gameOver", onGameOver);
-        }
+        const onMove = (move: Move) => {
+            console.log("Received move:", move);
 
-        const sendJoin = () => {
-            socket.emit("join", {gameId: game.id, userId: user.id});
+            chessRef.current.move({
+                from: move.from,
+                to: move.to,
+                promotion: move.promotion,
+            });
+
+            setGameState((prev) => ({
+                ...prev,
+                currentFen: move.fen,
+                moves: [...prev.moves, move],
+                capturedPieces: {
+                    ...prev.capturedPieces,
+                    [chessRef.current.turn() === "w" ? "black" : "white"]: [
+                        ...prev.capturedPieces[chessRef.current.turn() === "w" ? "black" : "white"],
+                        ...(move.capturedPiece ? [move.capturedPiece] : []),
+                    ],
+                },
+            }));
+        };
+
+        const onGameOver = (data: { result: string; finalFen: string }) => {
+            console.log("Game over:", data);
+            chessRef.current.load(data.finalFen);
+
+            Swal.fire({
+                title: "Game Over!",
+                text: `Result: ${data.result}`,
+                icon: "info",
+                confirmButtonText: "View Game",
+            })
+        };
+
+        const onError = (message: string) => {
+            console.error("Socket error:", message);
+            Swal.fire("Error", message, "error");
+        };
+
+        socket.on("waiting", onWaiting);
+        socket.on("start", onStart);
+        socket.on("move", onMove);
+        socket.on("gameOver", onGameOver);
+        socket.on("error", onError);
+
+        const joinGame = () => {
+            socket.emit("join", { gameId: gameState.id, userId: user.id });
         };
 
         if (socket.connected) {
-            sendJoin();
+            joinGame();
         } else {
-            socket.once("connect", sendJoin);
+            socket.once("connect", joinGame);
         }
 
         return () => {
-            try {
-                socket.off("move", onMove);
-                socket.off("gameOver", onGameOver);
-                socket.off("waiting", onWaiting);
-                socket.off("start", onStart);
-                socket.off("connect", sendJoin);
-            } catch (e) {
-                console.warn('Error during socket cleanup', e);
-            }
-            listenersAttachedRef.current = false;
+            socket.off("waiting", onWaiting);
+            socket.off("start", onStart);
+            socket.off("move", onMove);
+            socket.off("gameOver", onGameOver);
+            socket.off("error", onError);
+            socket.off("connect", joinGame);
         };
-    }, [user?.id, isBotGame, game.id, playerWhite, playerBlack, moves, chatMessages, matchAnnouncementShown, router]);
-
-    useEffect(() => {
-        if (game.fen) {
-            chess.current.load(game.fen);
-        }
-    }, [game.fen]);
+    }, [user?.id, isBotGame, gameState.id, router]);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
-        let timerInterval: NodeJS.Timeout | undefined;
+        const playerWhite = gameState.playerWhite?.id ? gameState.playerWhite?.username : gameState.bot?.name || "White";
+        const playerBlack = gameState.playerBlack?.id ? gameState.playerBlack?.username : gameState.bot?.name || "Black";
+
         Swal.fire({
-            title: "La partie commence !",
-            html: `<b>${playerWhite?.username || "Joueur 1"}</b> (blancs) vs <b>${playerBlack?.username || "Joueur 2"}</b> (noirs)`,
+            title: "Match starts!",
+            html: `<b>${playerWhite}</b> (White) vs <b>${playerBlack}</b> (Black)`,
             timer: 2000,
             timerProgressBar: true,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-            willClose: () => {
-            }
+            showConfirmButton: false,
         }).then(() => {
             setShowMatchAnnouncement(false);
         });
-        return () => {
-            if (timerInterval) clearInterval(timerInterval);
-        };
-    }, [playerBlack?.username, playerWhite?.username, showMatchAnnouncement]);
+    }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot?.name]);
 
-    const handleMove = (move: Move) => {
-        if (isBotGame) return;
-        const nextMoveNumber = moveNumber + 1;
-        chess.current.move(move);
-        setBoardState(chess.current.fen());
-        setMoveNumber(nextMoveNumber);
-        setMoves([...moves, {...move, number: nextMoveNumber}]);
-        if (socketRef.current) {
-            console.log("Envoi move:", move);
-            socketRef.current.emit("move", {
-                gameId: game.id,
-                move: {
-                    ...move,
-                    moveNumber: nextMoveNumber,
-                },
+    const handleMove = useCallback(
+        async (move: Omit<Move, "fen" | "moveNumber">) => {
+            if (isOnlineGame && !canPlay) return;
+
+            const moveNumber = gameState.moves.length + 1;
+
+            const result = chessRef.current.move({
+                from: move.from,
+                to: move.to,
+                promotion: move.promotion,
             });
-        }
-    };
 
-    const chessboardWrapper =
-        <ChessboardWrapper
-            boardOrientation={orientation}
-            isOnline={!isBotGame}
-            botElo={game.bot?.elo}
-            isStatic={false}
-            onMove={!isBotGame ? handleMove : undefined}
-            boardState={!isBotGame ? boardState : game.fen}
-            canPlay={!isBotGame ? canPlay : undefined}
-        />
+            if (!result) return;
 
-    const gamePanel =
-        <GameInfos
-            socket={!isBotGame ? socketRef.current : undefined}
-            game={game}
-            playerWhite={playerWhite}
-            playerBlack={playerBlack}
-            user={user}
-            moves={moves}
-            chatMessages={!isBotGame ? chatMessages : []}
-            isReconnecting={isReconnecting}
-        />
+            const completeMove: Move = {
+                ...move,
+                fen: chessRef.current.fen(),
+                moveNumber,
+                capturedPiece: result.captured,
+            };
 
-    if (!isBotGame && !isReconnecting && waiting) {
+            if (isBotGame) {
+                try {
+                    const res = await fetch(`/api/games/${gameState.id}/move`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ move: completeMove }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Erreur serveur");
+                } catch (err: any) {
+                    console.error("Failed to save bot move:", err);
+                    Swal.fire("Error", err?.message || "Erreur serveur", "error");
+                }
+            } else {
+                socketRef.current?.emit("move", {
+                    gameId: gameState.id,
+                    move: completeMove,
+                });
+            }
+
+            setGameState((prev) => ({
+                ...prev,
+                currentFen: completeMove.fen,
+                moves: [...prev.moves, completeMove],
+                capturedPieces: {
+                    ...prev.capturedPieces,
+                    [chessRef.current.turn() === "w" ? "black" : "white"]: [
+                        ...prev.capturedPieces[chessRef.current.turn() === "w" ? "black" : "white"],
+                        ...(completeMove.capturedPiece ? [completeMove.capturedPiece] : []),
+                    ],
+                },
+            }));
+        },
+        [isBotGame, canPlay, gameState.id, gameState.moves.length, isOnlineGame]
+    );
+
+    if (isOnlineGame && waiting) {
         return (
-            <GameLayout gamePanel={<GameWaiting value={game.code}/>}/>
-        )
-    } else {
-        return (
-            <GameLayout chessBoard={chessboardWrapper} gamePanel={gamePanel} isGameStarted={true}/>
-        )
+            <GameLayout gamePanel={<GameWaiting value={initialGame.code || ""} />} />
+        );
     }
 
-    //TODO Réfléchir sincèrement au gameflow pour éviter les scintillements et avoir une expérience plus fluide
+    return (
+        <GameLayout
+            chessBoard={
+                <ChessboardWrapper
+                    boardOrientation={orientation}
+                    boardState={gameState.currentFen}
+                    onMove={handleMove}
+                    canPlay={canPlay}
+                    isStatic={false}
+                    isOnline={isOnlineGame}
+                    botElo={initialGame.bot?.elo}
+                    isBotTurn={isBotGame && currentTurn === initialGame.bot?.id}
+                />
+            }
+            gamePanel={
+                <GameInfos
+                    game={gameState}
+                    playerWhite={gameState.playerWhite}
+                    playerBlack={gameState.playerBlack}
+                    user={user}
+                    moves={gameState.moves}
+                    chatMessages={gameState.chatMessages || []}
+                    socket={socketRef.current}
+                />
+            }
+            isGameStarted={true}
+            capturedPieces={gameState.capturedPieces}
+        />
+    );
 };
 
 export default GameBoardClient;
