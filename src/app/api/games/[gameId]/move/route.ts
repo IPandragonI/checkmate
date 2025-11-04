@@ -1,10 +1,16 @@
-import { NextResponse } from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import { GameService } from "@/server/services/gameServices";
 import { Move } from "@/app/types/game";
+import {getUserFromRequest} from "@/app/api/utils/auth";
 
-export async function POST(request: Request, { params }: { params: { gameId: string } }) {
+export async function POST(request: NextRequest, context: { params: Promise<{ gameId: string }> }) {
     try {
-        const gameId = params.gameId;
+        const user = await getUserFromRequest();
+        if (!user?.id) {
+            return NextResponse.json({error: "Non authentifié"}, {status: 401});
+        }
+
+        const { gameId } = await context.params;
         if (!gameId) {
             return NextResponse.json({ error: "Paramètre de partie manquant" }, { status: 400 });
         }
