@@ -56,6 +56,17 @@ const GameForm = () => {
             const data = await res.json();
             if (!res.ok || !data.gameId) throw new Error(data.error || "Erreur lors de la création de la partie");
             router.push(`/games/${data.gameId}`);
+            if (mode === "bot") {
+                if (color === "white") return;
+                const botMoveRes = await fetch(`/api/games/${data.gameId}/bot-move`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                });
+                const botMoveData = await botMoveRes.json();
+                if (!botMoveRes.ok) {
+                    console.error("Erreur lors du coup du bot:", botMoveData.error);
+                }
+            }
             if (mode === "online") {
                 try {
                     await navigator.clipboard.writeText(code);
@@ -92,14 +103,14 @@ const GameForm = () => {
                         <StartColorField color={color} onClick={() => setColor("white")} onClick1={() => setColor("black")} onClick2={() => setColor("random")}/>
                     </>
                 )}
-                <TimeModeField value={timeLimit} mode={timeMode} onChange={e => setTimeLimit(e.target.value)}
-                               setMode={setTimeMode}/>
+                <TimeModeField value={timeLimit} mode={mode} timeMode={timeMode} onChange={e => setTimeLimit(e.target.value)}
+                               setTimeMode={setTimeMode}/>
                 {mode === "online" &&
                     <GameCodeField value={code}/>
                 }
             </div>
             <div>
-                <button className="btn btn-primary w-full" type="submit" disabled={loading}>
+                <button className={`btn ${mode === 'bot' ? 'btn-secondary' : 'btn-primary'} w-full`} type="submit" disabled={loading}>
                     {loading ? <span className="loading loading-spinner loading-sm mr-2"></span> : null}
                     Créer la partie
                 </button>

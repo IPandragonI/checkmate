@@ -7,11 +7,13 @@ import GameHistorySection from "@/app/components/dashboard/GameHistorySection";
 import StatisticsSection from "@/app/components/dashboard/StatisticsSection";
 import GamesInProgressSection from "@/app/components/dashboard/GamesInProgressSection";
 import Topbar from "@/app/components/ui/Topbar";
+import EloEvolutionSection from "@/app/components/dashboard/EloEvolutionSection";
 
 const Dashboard = () => {
     const {data: session, isPending} = useSession();
     const [user, setUser] = useState(null);
     const [gameHistory, setGameHistory] = useState([]);
+    const [ratinHistory, setRatingHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -22,6 +24,7 @@ const Dashboard = () => {
             .then(data => {
                 setUser(data.user);
                 setGameHistory(data.gameHistory);
+                setRatingHistory(data.ratingHistory);
                 setLoading(false);
             });
     }, [session?.user?.id]);
@@ -51,10 +54,14 @@ const Dashboard = () => {
                             <StatisticsSection gameHistory={gameHistory} user={user}/>
                         </div>
                     </div>
-                    {/* Colonne de blocs à droite (visible seulement sur desktop) */}
+                    {/* Colonne de blocs à droite (visible seulement sur pc) */}
                     <div className="flex flex-col gap-4 lg:block hidden">
                         <StatisticsSection gameHistory={gameHistory} user={user}/>
                     </div>
+                </div>
+
+                <div className="w-full grid grid-cols-1 h-64">
+                    <EloEvolutionSection ratingHistory={ratinHistory}/>
                 </div>
             </div>
         </div>

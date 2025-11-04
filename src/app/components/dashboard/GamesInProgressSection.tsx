@@ -22,7 +22,8 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
             <ul className="space-y-4 overflow-y-auto">
                 {gamesInProgress.map((game) => {
                     const isWhite = game.playerWhiteId === user?.id;
-                    const adversaire = isWhite ? game.playerBlack : game.playerWhite;
+                    let opponent = isWhite ? game.playerBlack : game.playerWhite;
+                    if (!opponent) opponent = game.bot;
                     const couleur = isWhite ? 'Blanc' : 'Noir';
                     const timeModeObj = timeModes.find(m => m.key === game.timeMode) || {label: game.timeMode, icon: null};
                     return (
@@ -37,8 +38,8 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                             <div className="flex justify-between items-center">
                                 <div className="flex justify-center gap-2 w-full items-center">
                                     <Svg src={`${!isWhite ? '/pieces/wP.svg' : '/pieces/bP.svg'}`} alt={couleur} width={20} height={20}/>
-                                    <span className="xl:text-xs">{adversaire?.username}</span>
-                                    <p className="xl:text-xs text-gray-500">({adversaire?.elo})</p>
+                                    <span className="xl:text-xs">{opponent?.username ?? 'Bot ' + opponent?.name}</span>
+                                    <p className="xl:text-xs text-gray-500">({opponent?.elo})</p>
                                 </div>
                             </div>
                             <Link href={`/games/${game.id}`} className="btn btn-primary btn-sm w-full mt-2">Rejoindre</Link>

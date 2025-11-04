@@ -11,6 +11,7 @@ const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
 
 const gameRooms = new Map<string, Set<string>>();
+const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 app.prepare().then(() => {
     const httpServer = createServer(handler);
@@ -39,6 +40,11 @@ app.prepare().then(() => {
                     gameRooms.set(gameId, new Set());
                 }
                 gameRooms.get(gameId)!.add(socket.id);
+
+                if (disconnectTimers.has(gameId)) {
+                    clearTimeout(disconnectTimers.get(gameId)!);
+                    disconnectTimers.delete(gameId);
+                }
 
                 const gameState = await GameService.getGameState(gameId);
                 if (!gameState) {
@@ -150,12 +156,21 @@ app.prepare().then(() => {
             if (gameId && gameRooms.has(gameId)) {
                 gameRooms.get(gameId)!.delete(socket.id);
 
-                if (gameRooms.get(gameId)!.size < 2) {
-                    io.to(gameId).emit("waiting");
-                }
+                if (!disconnectTimers.has(gameId)) {
+                    const timer = setTimeout(() => {
+                        const room = gameRooms.get(gameId);
+                        if (!room || room.size === 0) {
+                            gameRooms.delete(gameId);
+                        }
 
-                if (gameRooms.get(gameId)!.size === 0) {
-                    gameRooms.delete(gameId);
+                        if (room && room.size < 2) {
+                            io.to(gameId).emit("waiting");
+                        }
+
+                        disconnectTimers.delete(gameId);
+                    }, 3000);
+
+                    disconnectTimers.set(gameId, timer);
                 }
             }
         });

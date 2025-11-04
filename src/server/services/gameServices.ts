@@ -168,6 +168,130 @@ export class GameService {
                 finishedAt: new Date(),
             },
         });
+
+        await this.updateRatings(gameId, result);
+    }
+
+    private static async updateRatings(gameId: string, result: string) {
+        const game = await prisma.game.findUnique({
+            where: {id: gameId},
+            select: {
+                playerWhiteId: true,
+                playerBlackId: true,
+                botId: true,
+            },
+        });
+
+        if (!game) return;
+
+        //Evolution du classement contre un bot désactivée pour le moment
+
+        // if (game.botId) {
+        //     const humanId = game.playerWhiteId ?? game.playerBlackId;
+        //     if (!humanId) return;
+        //
+        //     const [human, bot] = await Promise.all([
+        //         prisma.user.findUnique({ where: { id: humanId } }),
+        //         prisma.bot.findUnique({ where: { id: game.botId } }),
+        //     ]);
+        //
+        //     if (!human || !bot) return;
+        //
+        //     const rh = human.elo ?? 400;
+        //     const rb = bot.elo ?? 400;
+        //
+        //     const expectedH = 1 / (1 + Math.pow(10, (rb - rh) / 400));
+        //
+        //     let scoreH: number;
+        //     const humanIsWhite = humanId === game.playerWhiteId;
+        //     if (result === "WHITE_WIN") {
+        //         scoreH = humanIsWhite ? 1 : 0;
+        //     } else if (result === "BLACK_WIN") {
+        //         scoreH = humanIsWhite ? 0 : 1;
+        //     } else {
+        //         scoreH = 0.5;
+        //     }
+        //
+        //     const K = 32;
+        //     const newRh = Math.round(rh + K * (scoreH - expectedH));
+        //
+        //     await prisma.$transaction([
+        //         prisma.user.update({ where: { id: human.id }, data: { elo: newRh } }),
+        //         prisma.ratingHistory.create({
+        //             data: {
+        //                 userId: human.id,
+        //                 oldElo: rh,
+        //                 newElo: newRh,
+        //                 gameId: gameId,
+        //                 createdAt: new Date(),
+        //             },
+        //         }),
+        //     ]);
+        //
+        //     return;
+        // }
+
+        const playerWhite = await prisma.user.findUnique({
+            where: {id: game.playerWhiteId!},
+        });
+        const playerBlack = await prisma.user.findUnique({
+            where: {id: game.playerBlackId!},
+        });
+
+        if (!playerWhite || !playerBlack) return;
+
+        const ra = playerWhite.elo ?? 400;
+        const rb = playerBlack.elo ?? 400;
+
+        const expectedA = 1 / (1 + Math.pow(10, (rb - ra) / 400));
+        const expectedB = 1 / (1 + Math.pow(10, (ra - rb) / 400));
+
+        let scoreA: number;
+        let scoreB: number;
+        if (result === "WHITE_WIN") {
+            scoreA = 1; scoreB = 0;
+        } else if (result === "BLACK_WIN") {
+            scoreA = 0; scoreB = 1;
+        } else {
+            scoreA = 0.5; scoreB = 0.5;
+        }
+
+        const K = 32;
+
+        const newRa = Math.round(ra + K * (scoreA - expectedA));
+        const newRb = Math.round(rb + K * (scoreB - expectedB));
+
+        await prisma.$transaction([
+            prisma.user.update({
+                where: {id: playerWhite.id},
+                data: {elo: newRa},
+            }),
+            prisma.user.update({
+                where: {id: playerBlack.id},
+                data: {elo: newRb},
+            }),
+        ]);
+
+        await prisma.$transaction([
+            prisma.ratingHistory.create({
+                data: {
+                    userId: playerWhite.id,
+                    oldElo: ra,
+                    newElo: newRa,
+                    gameId: gameId,
+                    createdAt: new Date(),
+                },
+            }),
+            prisma.ratingHistory.create({
+                data: {
+                    userId: playerBlack.id,
+                    oldElo: rb,
+                    newElo: newRb,
+                    gameId: gameId,
+                    createdAt: new Date(),
+                },
+            }),
+        ])
     }
 
     /**
@@ -190,4 +314,3 @@ export class GameService {
         return (await this.getGameState(gameId))!;
     }
 }
-

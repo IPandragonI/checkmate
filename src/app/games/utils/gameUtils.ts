@@ -34,20 +34,6 @@ export async function handleGameOver({chess, playerWhite, playerBlack, moves, ch
     const result = getGameResult(chess) || GameResult.DRAW;
     const resultString = getGameResultString(result);
     const winner = chess.turn() === 'w' ? playerBlack : playerWhite;
-    const finishedAt = new Date().toISOString();
-    await fetch('/api/games/' + gameId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            gameId: gameId,
-            result,
-            moves,
-            chatMessages,
-            finishedAt,
-        }),
-    });
 
     setTimeout(async () => {
         await Swal.fire({
@@ -59,7 +45,7 @@ export async function handleGameOver({chess, playerWhite, playerBlack, moves, ch
             cancelButtonText: 'Retour au menu',
         }).then((res) => {
             if (res.isConfirmed) {
-                router.push("games/create");
+                router.push("/create");
             } else if (res.isDismissed) {
                 router.push("/");
             }

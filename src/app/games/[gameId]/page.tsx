@@ -1,5 +1,5 @@
 import React from "react";
-import GameBoardClient from "@/app/games/[gameId]/gameBoardClient";
+import { GameBoardClient } from "@/app/games/[gameId]/gameBoardClient";
 import {GameService} from "@/server/services/gameServices";
 
 export const dynamic = 'force-dynamic';

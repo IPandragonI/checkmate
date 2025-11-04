@@ -55,7 +55,6 @@ function renderCapturedPieces(capturedPieces: any[], isWhite: undefined | boolea
 }
 
 const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, isWhite = true}: GamePlayerInfoProps) => {
-    console.log(capturedPieces)
     return (
         <div className={`${isGameStarted ? "" : "hidden"} w-full flex items-center justify-center`}>
             <div className="w-full p-2 flex items-center gap-4">

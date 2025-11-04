@@ -11,18 +11,16 @@ export interface Move {
     from: string;
     to: string;
     promotion?: string;
-    fen?: string | null;
+    fen?: string;
 }
 
 interface ChessboardWrapperProps {
     boardOrientation?: "white" | "black";
     botElo?: number;
-
     isOnline?: boolean;
     onMove?: (move: Move) => void;
     boardState?: string;
     canPlay?: boolean;
-
     isStatic?: boolean;
     isBotTurn?: boolean;
 }
@@ -34,12 +32,10 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  onMove,
                                                                  boardState,
                                                                  canPlay = true,
-                                                                 isStatic = true, 
+                                                                 isStatic = false,
                                                                  isBotTurn = false,
                                                              }) => {
-
     const isBotMode = !isOnline && !!botElo && !isStatic;
-    const isOnlineMode = isOnline && !isStatic;
 
     const chessEngineRef = useRef<ChessEngine>(new ChessEngine(boardState, botElo));
     const chessEngine = chessEngineRef.current;
@@ -49,9 +45,15 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
 
     const pieceComponents = getCustomPieces();
     const boardStyles = getBoardStyles();
-    
+
     useEffect(() => {
-        if (boardState) chessEngine.setFen(boardState);
+        if (boardState) {
+            try {
+                chessEngine.setFen(boardState);
+            } catch (e) {
+                console.error("Invalid FEN:", e);
+            }
+        }
     }, [boardState, chessEngine]);
 
     useEffect(() => {
@@ -59,31 +61,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             chessEngine.setBotElo(botElo);
         }
     }, [botElo, isBotMode, chessEngine]);
-
-    const makeBotMove = useCallback(() => {
-        if (!isBotMode) return;
-
-        setTimeout(() => {
-            const botMove = chessEngine.makeBotMove();
-            if (botMove !== null) {
-                setOptionSquares({});
-                if (onMove) {
-                    onMove({
-                        from: botMove.from,
-                        to: botMove.to,
-                        promotion: botMove.promotion,
-                        fen: botMove.fen,
-                    });
-                }
-            }
-        }, 500);
-    }, [isBotMode, chessEngine, onMove]);
-
-    useEffect(() => {
-        if (isBotMode && isBotTurn) {
-            makeBotMove();
-        }
-    }, [isBotMode, makeBotMove, isBotTurn]);
 
     const getMoveOptions = useCallback(
         (square: Square) => {
@@ -122,9 +99,13 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         ({ square, piece }: { square: Square; piece?: string }) => {
             if (isStatic) return;
 
-            if (isOnlineMode && !canPlay) {
+            if (!canPlay) {
                 setMoveFrom(null);
                 setOptionSquares({});
+                return;
+            }
+
+            if (isBotMode && isBotTurn) {
                 return;
             }
 
@@ -145,39 +126,50 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                 return;
             }
 
-            if (onMove) {
-                const fen = chessEngine.getFenAfterMove(
-                    moveFrom,
-                    square,
-                    foundMove.promotion
-                );
+            const fen = chessEngine.getFenAfterMove(
+                moveFrom,
+                square,
+                foundMove.promotion
+            );
 
+            if (!fen) {
+                console.error("Failed to calculate FEN");
+                return;
+            }
+
+            if (onMove) {
                 onMove({
                     from: moveFrom,
                     to: square,
                     promotion: foundMove.promotion,
-                    fen: fen || chessEngine.getFen(),
+                    fen,
                 });
-
-                chessEngine.move(moveFrom, square);
-
-                setMoveFrom(null);
-                setOptionSquares({});
-                return;
             }
 
-            chessEngine.move(moveFrom, square);
             setMoveFrom(null);
             setOptionSquares({});
         },
-        [isStatic, isOnlineMode, canPlay, moveFrom, chessEngine, getMoveOptions, onMove]
+        [
+            isStatic,
+            canPlay,
+            isBotMode,
+            isBotTurn,
+            moveFrom,
+            chessEngine,
+            getMoveOptions,
+            onMove,
+        ]
     );
 
     const onPieceDrop = useCallback(
         ({ sourceSquare, targetSquare }: { sourceSquare: Square; targetSquare: string }) => {
             if (isStatic) return false;
 
-            if (isOnlineMode && !canPlay) {
+            if (!canPlay) {
+                return false;
+            }
+
+            if (isBotMode && isBotTurn) {
                 return false;
             }
 
@@ -190,30 +182,36 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
 
             if (!foundMove) return false;
 
-            if (onMove) {
-                const fen = chessEngine.getFenAfterMove(
-                    sourceSquare,
-                    targetSquare,
-                    foundMove.promotion
-                );
+            const fen = chessEngine.getFenAfterMove(
+                sourceSquare,
+                targetSquare,
+                foundMove.promotion
+            );
 
+            if (!fen) {
+                console.error("Failed to calculate FEN");
+                return false;
+            }
+
+            if (onMove) {
                 onMove({
                     from: sourceSquare,
                     to: targetSquare,
                     promotion: foundMove.promotion,
-                    fen: fen || chessEngine.getFen(),
+                    fen,
                 });
-                chessEngine.move(sourceSquare, targetSquare);
-                return true;
             }
 
-            return false;
+            setMoveFrom(null);
+            setOptionSquares({});
+
+            return true;
         },
-        [isStatic, isOnlineMode, canPlay, chessEngine, onMove]
+        [isStatic, canPlay, isBotMode, isBotTurn, chessEngine, onMove]
     );
 
     const getCurrentPosition = () => {
-        if (isOnlineMode && boardState) {
+        if (boardState) {
             return boardState.split(" ")[0];
         }
         return chessEngine.getFen().split(" ")[0];
@@ -224,14 +222,16 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         pieces: pieceComponents,
         boardOrientation,
         position: getCurrentPosition(),
+        customSquareStyles: optionSquares,
         squareStyles: optionSquares,
+        arePiecesDraggable: !isStatic && canPlay && !(isBotMode && isBotTurn),
         allowDragging: !isStatic,
+        animationDuration: 300,
     };
 
     if (!isStatic) {
         chessboardOptions.onSquareClick = onSquareClick;
         chessboardOptions.onPieceDrop = onPieceDrop;
-        chessboardOptions.showAnimations = true;
     }
 
     return (

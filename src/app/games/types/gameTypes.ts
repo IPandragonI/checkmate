@@ -10,7 +10,3 @@ export interface GameOverHandlerProps {
     router: any;
 }
 
-export interface GameBoardClientProps {
-    game: any;
-}
-
