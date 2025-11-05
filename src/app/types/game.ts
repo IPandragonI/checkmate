@@ -1,3 +1,39 @@
+export const timeModes: { key: string; label: string; options: { value: string; label: string }[] }[] = [
+    {
+        key: "BULLET",
+        label: "Bullet",
+        options: [
+            { value: "1", label: "1 min" },
+            { value: "3", label: "3 min" }
+        ]
+    },
+    {
+        key: "BLITZ",
+        label: "Blitz",
+        options: [
+            { value: "3", label: "3 min" },
+            { value: "5", label: "5 min" }
+        ]
+    },
+    {
+        key: "RAPID",
+        label: "Rapide",
+        options: [
+            { value: "10", label: "10 min" },
+            { value: "15", label: "15 min" },
+            { value: "30", label: "30 min" }
+        ]
+    },
+    {
+        key: "CLASSICAL",
+        label: "Classique",
+        options: [
+            { value: "60", label: "60 min" },
+            { value: "120", label: "120 min" }
+        ]
+    }
+];
+
 export interface Move {
     from: string;
     to: string;
@@ -25,6 +61,10 @@ export interface GameState {
     playerBlack?: Player;
     bot?: Bot;
     chatMessages?: ChatMessage[];
+    timeMode: string;
+    timeLimit: Date | null;
+    whiteTimeLeft: Date | null;
+    blackTimeLeft: Date | null;
 }
 
 export interface Player {
@@ -38,14 +78,13 @@ export interface Player {
 
 export interface Bot {
     id: string;
-    name: string;
+    username: string;
     label: string;
     elo: number;
     img: string;
 }
 
 export interface ChatMessage {
-    id: string;
     userId: string;
     message: string;
     sentAt: Date;
@@ -67,5 +106,13 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
     join: (data: { gameId: string; userId: string }) => void;
     move: (data: { gameId: string; move: Move }) => void;
-    messageSend: (data: { gameId: string; msg: ChatMessage }) => void;
+    messageSend: (data: { gameId: string; chatMessage: ChatMessage }) => void;
 }
+
+export const WEIGHT: Record<string, number> = {
+    q: 9,
+    r: 5,
+    b: 3,
+    n: 3,
+    p: 1,
+};

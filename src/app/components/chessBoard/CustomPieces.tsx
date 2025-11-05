@@ -10,8 +10,8 @@ export function getCustomPieces() {
     pieceNames.forEach(piece => {
         components[piece] = () => (
             <div style={{
-                width: "80%",
-                height: "80%",
+                width: "100%",
+                height: "100%",
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'

@@ -142,9 +142,10 @@ app.prepare().then(() => {
             }
         });
 
-        socket.on("messageSend", async ({gameId, msg}) => {
+        socket.on("messageSend", async ({gameId, chatMessage}) => {
             try {
-                io.to(gameId).emit("messageReceived", msg);
+                await GameService.saveChatMessage(gameId, chatMessage);
+                io.to(gameId).emit("messageReceived", chatMessage);
             } catch (error) {
                 console.error("Error in messageSend handler:", error);
             }

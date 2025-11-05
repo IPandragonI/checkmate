@@ -25,6 +25,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const [gameState, setGameState] = useState<GameState>(initialGame);
     const [waiting, setWaiting] = useState(initialGame.status === "WAITING");
     const [showMatchAnnouncement, setShowMatchAnnouncement] = useState(false);
+    const [matchAnnounced, setMatchAnnounced] = useState(false);
 
     const socketRef = useRef<any>(null);
     const chessRef = useRef(new Chess(initialGame.currentFen));
@@ -85,18 +86,19 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             chess: chessRef.current,
             playerWhite: gameState.playerWhite,
             playerBlack: gameState.playerBlack,
-            moves: gameState.moves,
-            chatMessages: gameState.chatMessages || [],
-            gameId: gameState.id,
             router,
         });
-    }, [gameState.chatMessages, gameState.id, gameState.moves, gameState.playerBlack, gameState.playerWhite, router]);
+    }, [gameState.playerBlack, gameState.playerWhite, router]);
 
     useEffect(() => {
         if (!user?.id || isBotGame) return;
 
         const socket = getSocket(user.id);
         socketRef.current = socket;
+
+        const onConnect = () => {
+            socket.emit("join", { gameId: gameState.id, userId: user.id });
+        }
 
         const onWaiting = () => {
             console.log("Waiting for opponent...");
@@ -108,7 +110,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             playerBlack: Player;
             gameState: GameState;
         }) => {
-            console.log("Game started:", data);
             setWaiting(false);
             setGameState(data.gameState);
 
@@ -122,8 +123,9 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             });
             chessRef.current = chess;
 
-            if (!matchAnnouncementShownRef.current) {
+            if (!matchAnnouncementShownRef.current && !matchAnnounced) {
                 setShowMatchAnnouncement(true);
+                setMatchAnnounced(true);
                 matchAnnouncementShownRef.current = true;
             }
         };
@@ -148,38 +150,29 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             Swal.fire("Error", message, "error");
         };
 
+        socket.on("connect", onConnect);
         socket.on("waiting", onWaiting);
         socket.on("start", onStart);
         socket.on("move", onMove);
         socket.on("gameOver", onGameOver);
         socket.on("error", onError);
 
-        const joinGame = () => {
-            socket.emit("join", { gameId: gameState.id, userId: user.id });
-        };
-
-        if (socket.connected) {
-            joinGame();
-        } else {
-            socket.once("connect", joinGame);
-        }
-
         return () => {
+            socket.off("connect", onConnect);
             socket.off("waiting", onWaiting);
             socket.off("start", onStart);
             socket.off("move", onMove);
             socket.off("gameOver", onGameOver);
             socket.off("error", onError);
-            socket.off("connect", joinGame);
         };
-    }, [user?.id, isBotGame, gameState.id, onGameOver, applyMove]);
+    }, [user?.id, isBotGame, gameState.id, onGameOver, applyMove, matchAnnounced]);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
 
         const playerWhite = gameState.playerWhite?.username || "Bot";
         const playerBlack = gameState.playerBlack?.username || "Bot";
-        const botName = gameState.bot?.label || gameState.bot?.name;
+        const botName = gameState.bot?.label || gameState.bot?.username;
 
         const whiteName = gameState.playerWhite ? playerWhite : botName;
         const blackName = gameState.playerBlack ? playerBlack : botName;

@@ -92,9 +92,9 @@ model Game {
   result GameResult?
 
   timeMode      TimeMode @default(RAPID)
-  timeLimit     Int?
-  whiteTimeLeft Int?
-  blackTimeLeft Int?
+  timeLimit     DateTime
+  whiteTimeLeft DateTime
+  blackTimeLeft DateTime
 
   currentFen String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
   capturedPieces Json @default("{\"white\":[],\"black\":[]}")
@@ -154,7 +154,7 @@ model UserPreference {
 
 model Bot {
   id        String   @id @default(uuid())
-  name      String   @unique
+  username      String   @unique
   label     String
   elo       Int
   img       String

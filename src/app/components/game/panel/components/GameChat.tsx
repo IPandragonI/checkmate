@@ -1,16 +1,11 @@
 import React, {useEffect, useState} from "react";
+import {ChatMessage} from "@/app/types/game";
 
 interface GameChatProps {
     socket?: any;
     gameId: string;
     user: { id: string; name: string };
     chatMessages: any[];
-}
-
-interface ChatMessage {
-    userId: string;
-    message: string;
-    sentAt: number | string;
 }
 
 const GameChat: React.FC<GameChatProps> = ({socket, gameId, user, chatMessages}) => {
@@ -31,12 +26,12 @@ const GameChat: React.FC<GameChatProps> = ({socket, gameId, user, chatMessages})
     const sendMessage = (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
-        const msg: ChatMessage = {
+        const chatMessage: ChatMessage = {
             userId: user.id,
             message: input,
-            sentAt: Date.now(),
+            sentAt: new Date(),
         };
-        socket.emit("messageSend", {gameId, msg});
+        socket.emit("messageSend", {gameId, chatMessage});
         setInput("");
     };
 

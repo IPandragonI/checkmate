@@ -1,6 +1,6 @@
 import ChessboardWrapper from "@/app/components/chessBoard/ChessboardWrapper";
 import GamePlayerInfo from "@/app/components/game/GamePlayerInfo";
-import {CapturedPieces} from "@/app/types/game";
+import {CapturedPieces, WEIGHT} from "@/app/types/game";
 
 interface GameLayoutProps {
     chessBoard?: any
@@ -16,15 +16,21 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                                                    capturedPieces = { white: [], black: [] }
                                                }) => {
 
-    const whitePlayer = gamePanel?.props.playerWhite;
-    const blackPlayer = gamePanel?.props.playerBlack;
-    const user = gamePanel?.props.user;
+    const whitePlayer = gamePanel?.props?.playerWhite ?? gamePanel?.props?.game?.bot;
+    const blackPlayer = gamePanel?.props?.playerBlack ?? gamePanel?.props?.game?.bot;
+    const user = gamePanel?.props?.user;
 
     const me = user?.id === whitePlayer?.id ? whitePlayer : blackPlayer;
     const myCapturedPieces = user?.id === whitePlayer?.id ? capturedPieces?.white : capturedPieces?.black;
 
     const opponent = user?.id === whitePlayer?.id ? blackPlayer : whitePlayer;
     const opponentCapturedPieces = user?.id === whitePlayer?.id ? capturedPieces?.black : capturedPieces?.white;
+
+    const myWeight = myCapturedPieces.reduce((acc: number, piece: string) => acc + (WEIGHT[piece.toLowerCase()] || 0), 0);
+    const opponentWeight = opponentCapturedPieces.reduce((acc: number, piece: string) => acc + (WEIGHT[piece.toLowerCase()] || 0), 0);
+
+    const myWeightDiff = myWeight - opponentWeight;
+    const opponentWeightDiff = opponentWeight - myWeight;
 
     const isWhite = user?.id === whitePlayer?.id;
 
@@ -33,11 +39,11 @@ const GameLayout: React.FC<GameLayoutProps> = ({
             <div className={`${isGameStarted ? "" : "hidden md:block"} md:w-3/5 w-full h-full flex`}>
                 <div className={`h-full w-full mx-auto flex flex-col items-center justify-center py-8 md:py-0`}>
                     <div className={`w-full ${isGameStarted ? "justify-start md:justify-between" : "justify-center"} w-full flex flex-col items-center gap-2`}>
-                        <GamePlayerInfo isGameStarted={isGameStarted} player={opponent} capturedPieces={opponentCapturedPieces} isWhite={!isWhite} />
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={opponent} capturedPieces={opponentCapturedPieces} weightDiff={opponentWeightDiff} isWhite={!isWhite} />
                         <div className={`${isGameStarted ? "w-[80%]" : "w-[90%]"} aspect-square shadow-lg rounded-lg flex items-center justify-center mx-auto p-2 bg-base-200 border border-gray-200`}>
                             {chessBoard}
                         </div>
-                        <GamePlayerInfo isGameStarted={isGameStarted} player={me} capturedPieces={myCapturedPieces} isWhite={isWhite} />
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={me} capturedPieces={myCapturedPieces} weightDiff={myWeightDiff} isWhite={isWhite} />
                     </div>
                 </div>
             </div>

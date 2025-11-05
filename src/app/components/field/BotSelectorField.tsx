@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {Svg} from "@/app/utils/Svg";
+import {Bot} from "@/app/types/game";
 
 interface BotSelectorProps {
     botId: string;
     setBotId: (level: string) => void;
-}
-
-interface Bot {
-    id: string;
-    name: string;
-    label: string;
-    elo: number;
-    img: string;
 }
 
 const BotSelectorField: React.FC<BotSelectorProps> = ({botId, setBotId}) => {
@@ -43,17 +36,17 @@ const BotSelectorField: React.FC<BotSelectorProps> = ({botId, setBotId}) => {
                             onClick={() => setBotId(l.id)}
                             tabIndex={0}
                             role="button"
-                            aria-label={`Choisir le bot ${l.name} de niveau ${l.label}`}
+                            aria-label={`Choisir le bot ${l.username} de niveau ${l.label}`}
                             onMouseEnter={() => setHovered(l.id)}
                             onMouseLeave={() => setHovered(null)}
                             onFocus={() => setHovered(l.id)}
                             onBlur={() => setHovered(null)}
                         >
                             <figure className="h-10 flex items-center justify-center">
-                                <Svg src={l.img} alt={l.name} width={26} height={26} className="mb-2"/>
+                                <Svg src={l.img} alt={l.username} width={26} height={26} className="mb-2"/>
                             </figure>
                             <div className="card-body p-0 justify-center items-center text-center">
-                                <h2 className={`card-title text-sm ${botId === l.id ? "text-white" : ""}`}>{l.name}</h2>
+                                <h2 className={`card-title text-sm ${botId === l.id ? "text-white" : ""}`}>{l.username}</h2>
                             </div>
                             {hovered === l.id && (
                                 <div className="absolute z-20 left-1/2 -translate-x-1/2 -top-10 mt-2 px-3 py-2 rounded bg-base-100 shadow text-xs text-center border border-gray-200 whitespace-nowrap">

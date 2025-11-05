@@ -7,7 +7,7 @@ const Svg = (props: React.ComponentProps<typeof Image>) => {
 
 const FilledSvg = (props: React.ComponentProps<typeof Image>) => {
     // eslint-disable-next-line jsx-a11y/alt-text
-    return <Image {...props} fill unoptimized />
+    return <Image {...props} fill unoptimized/>
 }
 
 export { Svg, FilledSvg }

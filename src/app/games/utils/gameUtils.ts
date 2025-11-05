@@ -2,8 +2,6 @@ import {Chess} from "chess.js";
 import {GameResult} from "@prisma/client";
 import Swal from "sweetalert2";
 
-import {GameOverHandlerProps} from "../types/gameTypes";
-
 export function getGameResult(chess: Chess): GameResult | null {
     const winner = chess.turn() === 'w' ? 'black' : 'white';
     if (chess.isCheckmate()) return winner === 'white' ? GameResult.WHITE_WIN : GameResult.BLACK_WIN;
@@ -30,7 +28,14 @@ export function getGameResultString(result: GameResult): string {
     }
 }
 
-export async function handleGameOver({chess, playerWhite, playerBlack, moves, chatMessages, gameId, router}: GameOverHandlerProps) {
+export interface GameOverHandlerProps {
+    chess: Chess;
+    playerWhite: any;
+    playerBlack: any;
+    router: any;
+}
+
+export async function handleGameOver({chess, playerWhite, playerBlack, router}: GameOverHandlerProps) {
     const result = getGameResult(chess) || GameResult.DRAW;
     const resultString = getGameResultString(result);
     const winner = chess.turn() === 'w' ? playerBlack : playerWhite;

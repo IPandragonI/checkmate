@@ -33,7 +33,6 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                     const gameResultForUser = (game.playerWhiteId === user?.id && game.result === GameResult.WHITE_WIN) ||
                         (game.playerBlackId === user?.id && game.result === GameResult.BLACK_WIN) ? 'WIN' :
                         (game.result === GameResult.WHITE_WIN ? 'LOSS' : 'DRAW');
-
                     return (
                         <tr key={game.id || idx}>
                             <td className="py-2 px-2 flex flex-col items-center justify-center">
@@ -45,7 +44,7 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                                     <div className="flex justify-center gap-2 w-full">
                                         <Svg src="/pieces/wP.svg" alt="Blanc" width={20} height={20}/>
                                         <span className={`${game.playerWhiteId === user?.id ? 'font-bold' : ''}`}>
-                                            {playerWhite.username ?? 'Bot ' + playerWhite.name}
+                                            {playerWhite.username}
                                         </span>
                                         <p className="text-gray-500">
                                             ({playerWhite.elo})
@@ -54,7 +53,7 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                                     <div className="flex justify-center gap-2 w-full">
                                         <Svg src="/pieces/bP.svg" alt="Noir" width={20} height={20}/>
                                         <span className={`${game.playerBlackId === user?.id ? 'font-bold' : ''}`}>
-                                            {playerBlack.username ?? 'Bot ' + playerBlack.name}
+                                            {playerBlack.username}
                                         </span>
                                         <p className="text-gray-500">
                                             ({playerBlack.elo})

@@ -1,4 +1,5 @@
 import { Chess, Square, Move as ChessMove } from "chess.js";
+import {WEIGHT} from "@/app/types/game";
 
 export class ChessEngine {
     private game: Chess;
@@ -54,7 +55,6 @@ export class ChessEngine {
     }
 
     evaluatePosition(fen: string): number {
-        const pieceValues: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
         let score = 0;
         const fenParts = fen.split(" ");
         const board = fenParts[0];
@@ -63,7 +63,7 @@ export class ChessEngine {
             if (char >= "1" && char <= "8") continue;
             if (char === "/") continue;
             const isWhite = char === char.toUpperCase();
-            const value = pieceValues[char.toLowerCase()] || 0;
+            const value = WEIGHT[char.toLowerCase()] || 0;
             score += isWhite ? value : -value;
         }
 

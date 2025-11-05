@@ -1,43 +1,21 @@
-    import React from "react";
+import React from "react";
 import {Target, Zap, Timer, Clock} from "lucide-react";
+import {timeModes} from "@/app/types/game";
 
-export const timeModes = [
-    {
-        key: "BULLET",
-        label: "Bullet",
-        icon: <Target size={14} className="inline-block text-red-500"/>,
-        options: [
-            {value: "1", label: "1 min"},
-            {value: "3", label: "3 min"}
-        ]
-    }, {
-        key: "BLITZ",
-        label: "Blitz",
-        icon: <Zap size={14} className="inline-block text-yellow-500"/>,
-        options: [
-            {value: "3", label: "3 min"},
-            {value: "5", label: "5 min"},
-        ]
-    },
-    {
-        key: "RAPID",
-        label: "Rapide",
-        icon: <Timer size={14} className="inline-block"/>,
-        options: [
-            {value: "10", label: "10 min"},
-            {value: "15", label: "15 min"},
-            {value: "30", label: "30 min"}
-        ]
-    }, {
-        key: "CLASSICAL",
-        label: "Classique",
-        icon: <Clock size={14} className="inline-block text-green-500"/>,
-        options: [
-            {value: "60", label: "60 min"},
-            {value: "120", label: "120 min"}
-        ]
+const getTimeModeIcon = (key: string) => {
+    switch (key) {
+        case "BULLET":
+            return <Target size={14} className="inline-block text-red-500"/>;
+        case "BLITZ":
+            return <Zap size={14} className="inline-block text-yellow-500"/>;
+        case "RAPID":
+            return <Timer size={14} className="inline-block"/>;
+        case "CLASSICAL":
+            return <Clock size={14} className="inline-block text-green-500"/>;
+        default:
+            return null;
     }
-];
+}
 
 const TimeModeField: React.FC<{ value: string, mode: string, timeMode: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, setTimeMode: (timeMode: string) => void }> = ({value, mode, timeMode, onChange, setTimeMode}) => {
     const currentMode = timeModes.find(m => m.key === timeMode) || timeModes[0];
@@ -54,7 +32,7 @@ const TimeModeField: React.FC<{ value: string, mode: string, timeMode: string, o
                             className={`btn btn-sm flex items-center gap-1 font-semibold px-3 py-1 rounded ${timeMode === m.key ? mode === 'bot' ? "btn-secondary" : "btn-primary" : "btn-outline"}`}
                             onClick={() => setTimeMode(m.key)}
                         >
-                            {m.icon}
+                            {getTimeModeIcon(m.key)}
                             {m.label}
                         </button>
                     ))}

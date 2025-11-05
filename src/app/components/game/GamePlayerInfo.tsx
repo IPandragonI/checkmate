@@ -1,22 +1,16 @@
 import Image from "next/image";
 import {Svg} from "@/app/utils/Svg";
+import {WEIGHT} from "@/app/types/game";
 
 interface GamePlayerInfoProps {
     isGameStarted?: boolean;
     player?: any;
     capturedPieces?: any[];
+    weightDiff?: number;
     isWhite?: boolean;
 }
 
 function renderCapturedPieces(capturedPieces: any[], isWhite: undefined | boolean) {
-    const WEIGHT: Record<string, number> = {
-        q: 9,
-        r: 5,
-        b: 3,
-        n: 3,
-        p: 1,
-    };
-
     const pieces: string[] = capturedPieces
         .map((p: any) => (typeof p === 'string' ? p.toLowerCase() : String(p).toLowerCase()))
         .filter(Boolean);
@@ -54,7 +48,7 @@ function renderCapturedPieces(capturedPieces: any[], isWhite: undefined | boolea
     });
 }
 
-const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, isWhite = true}: GamePlayerInfoProps) => {
+const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, weightDiff = 0,  isWhite = true}: GamePlayerInfoProps) => {
     return (
         <div className={`${isGameStarted ? "" : "hidden"} w-full flex items-center justify-center`}>
             <div className="w-full p-2 flex items-center gap-4">
@@ -66,12 +60,22 @@ const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, i
                     </div>
                 )}
                 <div className="flex items-center justify-between w-full">
-                    <span className="text-xs md:text-sm font-bold">{player?.username || "Joueur"}</span>
-                    <div className="flex items-center">
-                        {capturedPieces && capturedPieces.length > 0 && (() => {
-                            return renderCapturedPieces(capturedPieces, isWhite);
-                        })()}
-                     </div>
+                    <div className="flex flex-row md:flex-col items-start md:items-center gap-2">
+                        <span className="text-xs md:text-sm font-bold">{player?.username || "Joueur"}</span>
+                        <div className="flex items-center">
+                            {capturedPieces && capturedPieces.length > 0 && (() => {
+                                return renderCapturedPieces(capturedPieces, isWhite);
+                            })()}
+                            {weightDiff !== 0 && (
+                                <span className={`text-xs md:text-sm ml-2 ${weightDiff > 0 && 'text-gray-400'}`}>
+                                    {weightDiff > 0 && `+${weightDiff}`}
+                                </span>
+                            )}
+                         </div>
+                    </div>
+                    <div className="flex items-center bg-base-200 rounded-md px-2 py-1">
+                          <span className="text-sm font-mono">--:--</span>
+                    </div>
                 </div>
             </div>
         </div>

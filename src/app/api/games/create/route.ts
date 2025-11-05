@@ -16,6 +16,11 @@ export async function POST(req: NextRequest) {
         let game;
         let playerWhiteId;
         let playerBlackId;
+
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+        const timeLimitTime = timeLimit ? new Date(midnight.getTime() + timeLimit * 60000) : null;
+
         if (mode === "bot") {
             if (color === "white") {
                 playerWhiteId = user.id;
@@ -40,11 +45,14 @@ export async function POST(req: NextRequest) {
             if (!bot) {
                 return NextResponse.json({error: "Bot inexistant"}, {status: 400});
             }
+
             const data: any = {
                 code,
                 status: "IN_PROGRESS",
-                timeLimit: parseInt(timeLimit, 10),
+                timeLimit: timeLimitTime,
                 timeMode: timeMode?.toUpperCase() || "RAPID",
+                whiteTimeLeft: timeLimitTime,
+                blackTimeLeft: timeLimitTime,
                 playerWhiteId: playerWhiteId ?? null,
                 playerBlackId: playerBlackId ?? null,
                 botId: botId ?? null,
@@ -91,7 +99,7 @@ export async function POST(req: NextRequest) {
                 const data: any = {
                     code,
                     status: "WAITING",
-                    timeLimit: parseInt(timeLimit, 10),
+                    timeLimit: timeLimitTime,
                     timeMode: timeMode?.toUpperCase() || "RAPID",
                     playerWhiteId: playerWhiteId ?? null,
                     playerBlackId: playerBlackId ?? null,

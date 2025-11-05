@@ -29,14 +29,14 @@ const GameInfos: React.FC<GameInfosProps> = ({
     let adversaireElo = null;
 
     if (game.bot) {
-        adversaire = game.bot.name;
+        adversaire = game.bot.username;
         adversaireImg = game.bot.img;
         adversaireElo = game.bot.elo;
-    } else if (user?.id === playerWhite.id && playerBlack.id) {
+    } else if (user?.id === playerWhite.id && playerBlack?.id) {
         adversaire = playerBlack.username;
         adversaireImg = playerBlack.image;
         adversaireElo = playerBlack.elo;
-    } else if (user?.id === playerBlack.id && playerWhite.id) {
+    } else if (user?.id === playerBlack.id && playerWhite?.id) {
         adversaire = playerWhite.username;
         adversaireImg = playerWhite.image;
         adversaireElo = playerWhite.elo;

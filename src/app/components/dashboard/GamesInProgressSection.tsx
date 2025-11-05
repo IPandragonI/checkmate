@@ -1,6 +1,6 @@
 import Link from "next/link";
-import {timeModes} from "@/app/components/field/TimeModeField";
 import {Svg} from "@/app/utils/Svg";
+import {timeModes} from "@/app/types/game";
 
 function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     const gamesInProgress = (gameHistory || []).filter(g => g.status == 'IN_PROGRESS' && (g.playerWhiteId === user?.id || g.playerBlackId === user?.id));
@@ -25,12 +25,11 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                     let opponent = isWhite ? game.playerBlack : game.playerWhite;
                     if (!opponent) opponent = game.bot;
                     const couleur = isWhite ? 'Blanc' : 'Noir';
-                    const timeModeObj = timeModes.find(m => m.key === game.timeMode) || {label: game.timeMode, icon: null};
+                    const timeModeObj = timeModes.find((m: { key: any; }) => m.key === game.timeMode) || {label: game.timeMode};
                     return (
                         <li key={game.id} className="flex flex-col gap-2 p-3 rounded-xl bg-base-100 shadow">
                             <div className="flex justify-between items-center xl:flex-col xl:items-start">
                                 <div className="flex gap-2 items-center">
-                                    <div>{timeModeObj.icon}</div>
                                     <div className="font-semibold " >{game.timeLimit} min</div>
                                 </div>
                                 <span className="text-xs text-gray-500">{game.createdAt ? new Date(game.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
@@ -38,7 +37,7 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                             <div className="flex justify-between items-center">
                                 <div className="flex justify-center gap-2 w-full items-center">
                                     <Svg src={`${!isWhite ? '/pieces/wP.svg' : '/pieces/bP.svg'}`} alt={couleur} width={20} height={20}/>
-                                    <span className="xl:text-xs">{opponent?.username ?? 'Bot ' + opponent?.name}</span>
+                                    <span className="xl:text-xs">{opponent?.username}</span>
                                     <p className="xl:text-xs text-gray-500">({opponent?.elo})</p>
                                 </div>
                             </div>
