@@ -60,7 +60,7 @@ const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, w
                     </div>
                 )}
                 <div className="flex items-center justify-between w-full">
-                    <div className="flex flex-row md:flex-col items-start md:items-center gap-2">
+                    <div className="flex flex-row md:flex-col items-start md:items-start">
                         <span className="text-xs md:text-sm font-bold">{player?.username || "Joueur"}</span>
                         <div className="flex items-center">
                             {capturedPieces && capturedPieces.length > 0 && (() => {

@@ -62,9 +62,9 @@ export interface GameState {
     bot?: Bot;
     chatMessages?: ChatMessage[];
     timeMode: string;
-    timeLimit: Date | null;
-    whiteTimeLeft: Date | null;
-    blackTimeLeft: Date | null;
+    timeLimit: number | null;
+    whiteTimeLeft: number | null;
+    blackTimeLeft: number | null;
 }
 
 export interface Player {

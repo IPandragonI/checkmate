@@ -17,9 +17,7 @@ export async function POST(req: NextRequest) {
         let playerWhiteId;
         let playerBlackId;
 
-        const midnight = new Date();
-        midnight.setHours(0, 0, 0, 0);
-        const timeLimitTime = timeLimit ? new Date(midnight.getTime() + timeLimit * 60000) : null;
+        const timeLimitInMs = parseInt(timeLimit, 10) * 1000;
 
         if (mode === "bot") {
             if (color === "white") {
@@ -49,10 +47,10 @@ export async function POST(req: NextRequest) {
             const data: any = {
                 code,
                 status: "IN_PROGRESS",
-                timeLimit: timeLimitTime,
+                timeLimit: timeLimitInMs,
                 timeMode: timeMode?.toUpperCase() || "RAPID",
-                whiteTimeLeft: timeLimitTime,
-                blackTimeLeft: timeLimitTime,
+                whiteTimeLeft: timeLimitInMs,
+                blackTimeLeft: timeLimitInMs,
                 playerWhiteId: playerWhiteId ?? null,
                 playerBlackId: playerBlackId ?? null,
                 botId: botId ?? null,
@@ -99,7 +97,7 @@ export async function POST(req: NextRequest) {
                 const data: any = {
                     code,
                     status: "WAITING",
-                    timeLimit: timeLimitTime,
+                    timeLimit: timeLimitInMs,
                     timeMode: timeMode?.toUpperCase() || "RAPID",
                     playerWhiteId: playerWhiteId ?? null,
                     playerBlackId: playerBlackId ?? null,

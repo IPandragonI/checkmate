@@ -182,71 +182,19 @@ export class GameService {
             select: {
                 playerWhiteId: true,
                 playerBlackId: true,
-                botId: true,
+                bot: true,
             },
         });
 
-        if (!game) return;
+        if (!game || game.bot) return;
 
-        // Helper pour choisir K en fonction de l'elo (valeurs usuelles)
-        const chooseK = (elo: number) => {
-            if (elo < 2100) return 40;
-            if (elo > 2400) return 20;
-            return 32;
-        };
+        const playerWhite = await prisma.user.findUnique({
+            where: {id: game.playerWhiteId!},
+        });
+        const playerBlack = await prisma.user.findUnique({
+            where: {id: game.playerBlackId!},
+        });
 
-        // Si la partie implique un bot, on met à jour seulement l'utilisateur
-        if (game.botId) {
-            // trouver le bot et l'utilisateur
-            const bot = await prisma.bot.findUnique({ where: { id: game.botId } });
-            if (!bot) return;
-
-            // déterminer quel joueur est humain
-            const humanPlayerId = game.playerWhiteId ?? game.playerBlackId ?? null;
-            if (!humanPlayerId) return;
-
-            const human = await prisma.user.findUnique({ where: { id: humanPlayerId } });
-            if (!human) return;
-
-            const rHuman = human.elo ?? 400;
-            const rBot = bot.elo ?? 400;
-
-            // expected score for human
-            const expectedHuman = 1 / (1 + Math.pow(10, (rBot - rHuman) / 400));
-
-            let scoreHuman = 0.5;
-            if (result === "WHITE_WIN") {
-                // check if human was white
-                scoreHuman = game.playerWhiteId === humanPlayerId ? 1 : 0;
-            } else if (result === "BLACK_WIN") {
-                scoreHuman = game.playerBlackId === humanPlayerId ? 1 : 0;
-            } else {
-                scoreHuman = 0.5;
-            }
-
-            const K = chooseK(rHuman);
-            const newHuman = Math.round(rHuman + K * (scoreHuman - expectedHuman));
-
-            await prisma.$transaction([
-                prisma.user.update({ where: { id: human.id }, data: { elo: newHuman } }),
-                prisma.ratingHistory.create({
-                    data: {
-                        userId: human.id,
-                        oldElo: rHuman,
-                        newElo: newHuman,
-                        gameId: gameId,
-                        createdAt: new Date(),
-                    },
-                }),
-            ]);
-            return;
-        }
-
-        // Partie entre deux utilisateurs
-        if (!game.playerWhiteId || !game.playerBlackId) return;
-
-        const playerWhite = await prisma.user.findUnique({ where: { id: game.playerWhiteId } });
-        const playerBlack = await prisma.user.findUnique({ where: { id: game.playerBlackId } });
         if (!playerWhite || !playerBlack) return;
 
         const ra = playerWhite.elo ?? 400;
@@ -255,22 +203,52 @@ export class GameService {
         const expectedA = 1 / (1 + Math.pow(10, (rb - ra) / 400));
         const expectedB = 1 / (1 + Math.pow(10, (ra - rb) / 400));
 
-        let scoreA = 0.5, scoreB = 0.5;
-        if (result === "WHITE_WIN") { scoreA = 1; scoreB = 0; }
-        else if (result === "BLACK_WIN") { scoreA = 0; scoreB = 1; }
+        let scoreA: number;
+        let scoreB: number;
+        if (result === "WHITE_WIN") {
+            scoreA = 1; scoreB = 0;
+        } else if (result === "BLACK_WIN") {
+            scoreA = 0; scoreB = 1;
+        } else {
+            scoreA = 0.5; scoreB = 0.5;
+        }
 
-        const Ka = chooseK(ra);
-        const Kb = chooseK(rb);
+        const K = 32;
 
-        const newRa = Math.round(ra + Ka * (scoreA - expectedA));
-        const newRb = Math.round(rb + Kb * (scoreB - expectedB));
+        const newRa = Math.round(ra + K * (scoreA - expectedA));
+        const newRb = Math.round(rb + K * (scoreB - expectedB));
 
         await prisma.$transaction([
-            prisma.user.update({ where: { id: playerWhite.id }, data: { elo: newRa } }),
-            prisma.user.update({ where: { id: playerBlack.id }, data: { elo: newRb } }),
-            prisma.ratingHistory.create({ data: { userId: playerWhite.id, oldElo: ra, newElo: newRa, gameId, createdAt: new Date() } }),
-            prisma.ratingHistory.create({ data: { userId: playerBlack.id, oldElo: rb, newElo: newRb, gameId, createdAt: new Date() } }),
+            prisma.user.update({
+                where: {id: playerWhite.id},
+                data: {elo: newRa},
+            }),
+            prisma.user.update({
+                where: {id: playerBlack.id},
+                data: {elo: newRb},
+            }),
         ]);
+
+        await prisma.$transaction([
+            prisma.ratingHistory.create({
+                data: {
+                    userId: playerWhite.id,
+                    oldElo: ra,
+                    newElo: newRa,
+                    gameId: gameId,
+                    createdAt: new Date(),
+                },
+            }),
+            prisma.ratingHistory.create({
+                data: {
+                    userId: playerBlack.id,
+                    oldElo: rb,
+                    newElo: newRb,
+                    gameId: gameId,
+                    createdAt: new Date(),
+                },
+            }),
+        ])
     }
 
     /**

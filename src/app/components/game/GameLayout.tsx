@@ -4,14 +4,14 @@ import {CapturedPieces, WEIGHT} from "@/app/types/game";
 
 interface GameLayoutProps {
     chessBoard?: any
-    gamePanel: any
+    gamePanel?: any
     isGameStarted?: boolean,
     capturedPieces?: CapturedPieces
 }
 
 const GameLayout: React.FC<GameLayoutProps> = ({
                                                    chessBoard = <ChessboardWrapper/>,
-                                                   gamePanel,
+                                                   gamePanel = null,
                                                    isGameStarted = false,
                                                    capturedPieces = { white: [], black: [] }
                                                }) => {

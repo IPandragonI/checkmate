@@ -92,9 +92,9 @@ model Game {
   result GameResult?
 
   timeMode      TimeMode @default(RAPID)
-  timeLimit     DateTime
-  whiteTimeLeft DateTime
-  blackTimeLeft DateTime
+  timeLimit     Int?
+  whiteTimeLeft Int?
+  blackTimeLeft Int?
 
   currentFen String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
   capturedPieces Json @default("{\"white\":[],\"black\":[]}")
