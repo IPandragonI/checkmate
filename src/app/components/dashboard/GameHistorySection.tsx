@@ -1,6 +1,7 @@
 import {timeModes} from "@/app/types/game";
 import {Svg} from "@/app/utils/Svg";
 import {GameResult} from "@prisma/client";
+import {getTimeModeIcon} from "@/app/components/field/TimeModeField";
 
 function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     if (!gameHistory || gameHistory.length === 0) {
@@ -33,11 +34,14 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                     const gameResultForUser = (game.playerWhiteId === user?.id && game.result === GameResult.WHITE_WIN) ||
                         (game.playerBlackId === user?.id && game.result === GameResult.BLACK_WIN) ? 'WIN' :
                         (game.result === GameResult.WHITE_WIN ? 'LOSS' : 'DRAW');
+                    const modeIcon = getTimeModeIcon(modeObj.key);
                     return (
                         <tr key={game.id || idx}>
-                            <td className="py-2 px-2 flex flex-col items-center justify-center">
-                                {/*{modeObj.icon}*/}
-                                <span className="text-xs mt-1">{modeObj.label}</span>
+                            <td className="py-2 px-2">
+                                <div className="flex items-center justify-center gap-2">
+                                    {modeIcon}
+                                    <span className="text-sm">{modeObj.label}</span>
+                                </div>
                             </td>
                             <td className="py-2 px-2">
                                 <div className="flex flex-col justify-center w-full gap-1">

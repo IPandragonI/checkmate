@@ -128,6 +128,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                square,
                                piece
                            }: SquareHandlerArgs) {
+        debugger
         if (isStatic) return;
 
         if (!canPlay) {
@@ -186,7 +187,8 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
 
         setChessPosition(chessGame.fen());
 
-        if (!isOnline && botElo) setTimeout(makeBotMove, 300);
+        const botMoveDelay = Math.random() * (3000 - 800) + 800;
+        if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
 
         setMoveFrom('');
         setOptionSquares({});
@@ -220,7 +222,8 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             setMoveFrom('');
             setOptionSquares({});
 
-            if (!isOnline && botElo) setTimeout(makeBotMove, 500);
+            const botMoveDelay = Math.random() * (3000 - 800) + 800;
+            if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
 
             return true;
         } catch {

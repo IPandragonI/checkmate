@@ -27,13 +27,19 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const [showMatchAnnouncement, setShowMatchAnnouncement] = useState(false);
     const [matchAnnounced, setMatchAnnounced] = useState(false);
 
+    const [whiteTimeLeft, setWhiteTimeLeft] = useState<number | null>(initialGame.whiteTimeLeft);
+    const [blackTimeLeft, setBlackTimeLeft] = useState<number | null>(initialGame.blackTimeLeft);
+
     const socketRef = useRef<any>(null);
     const chessRef = useRef(new Chess(initialGame.currentFen));
     const matchAnnouncementShownRef = useRef(false);
+    const gameStateRef = useRef<GameState>(initialGame);
 
     const moveAudioRef = useRef<HTMLAudioElement | null>(null);
     const captureAudioRef = useRef<HTMLAudioElement | null>(null);
     const lastMoveByMeRef = useRef(false);
+    const timerIntervalRef = useRef<number | null>(null);
+    const lastTickRef = useRef<number | null>(null);
 
     useEffect(() => {
         try {
@@ -138,6 +144,12 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             });
             chessRef.current = chess;
 
+            setWhiteTimeLeft(data.gameState.whiteTimeLeft ?? null);
+            setBlackTimeLeft(data.gameState.blackTimeLeft ?? null);
+
+            const currentTurn = chess.turn() === "w" ? data.gameState.playerWhite?.id : data.gameState.playerBlack?.id;
+            setCanPlay(user.id === currentTurn);
+
             if (!matchAnnouncementShownRef.current && !matchAnnounced) {
                 setShowMatchAnnouncement(true);
                 setMatchAnnounced(true);
@@ -154,6 +166,12 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     currentFen: move.fen,
                     moves: [...prev.moves, move],
                 }));
+                try {
+                    chessRef.current.load(move.fen);
+                } catch (e) {
+                    console.warn('Failed to load FEN on onMove', e);
+                }
+                lastTickRef.current = Date.now();
                 setCanPlay(true);
 
                 if (lastMoveByMeRef.current) {
@@ -210,7 +228,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot]);
 
     const handleMove = useCallback(
-        async (move: Move, isBotMove: boolean) => {
+        async (move: Move) => {
             if (gameState.status === "FINISHED") return;
             if (isOnlineGame && !canPlay) return;
 
@@ -222,6 +240,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
 
             if (isBotGame) {
                 try {
+                    setCanPlay(false);
                     const chess = new Chess(move.fen);
                     const isGameOver = chess.isGameOver();
                     let result;
@@ -247,15 +266,41 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                         throw new Error(data.error || "Erreur serveur");
                     }
 
-                    setCanPlay(isBotMove);
-
                     setGameState((prev) => ({
                         ...prev,
                         currentFen: move.fen,
                         moves: [...prev.moves, completeMove],
                     }));
+                    try { chessRef.current.load(move.fen); } catch {}
+                    lastTickRef.current = Date.now();
 
                     playMoveSound(!!move.capturedPiece);
+
+                    if (data.botMove) {
+                        setTimeout(() => {
+                            try {
+                                chessRef.current.move({
+                                    from: data.botMove.from,
+                                    to: data.botMove.to,
+                                    promotion: data.botMove.promotion,
+                                });
+                            } catch (e) {}
+                            setGameState((prev) => ({
+                                ...prev,
+                                currentFen: data.botMove.fen,
+                                moves: [...prev.moves, data.botMove],
+                            }));
+                            lastTickRef.current = Date.now();
+                            playMoveSound(!!data.botMove.capturedPiece);
+                            setCanPlay(true);
+
+                            if (data.gameOver) {
+                                onGameOver({ result: data.result, finalFen: data.botMove.fen });
+                            }
+                        }, 500);
+                    } else {
+                        if (!data.gameOver) setCanPlay(true);
+                    }
 
                 } catch (err: any) {
                     console.error("Failed to save bot move:", err);
@@ -266,6 +311,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             } else {
                 lastMoveByMeRef.current = true;
                 playMoveSound(!!move.capturedPiece);
+                lastTickRef.current = Date.now();
                 socketRef.current?.emit("move", {
                     gameId: gameState.id,
                     move: completeMove,
@@ -275,6 +321,69 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
         },
         [isBotGame, canPlay, gameState.id, gameState.moves.length, gameState.currentFen, gameState.status, isOnlineGame, isBotTurn, onGameOver]
     );
+
+    useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+
+    useEffect(() => {
+        const hasWhite = whiteTimeLeft != null;
+        const hasBlack = blackTimeLeft != null;
+        if (!hasWhite && !hasBlack) return;
+
+        if (gameState.status !== 'IN_PROGRESS') return;
+
+        if (!lastTickRef.current) lastTickRef.current = Date.now();
+
+        const tick = () => {
+            const now = Date.now();
+            const last = lastTickRef.current ?? now;
+            const delta = now - last;
+            lastTickRef.current = now;
+
+            const side = chessRef.current.turn();
+            if (side === 'w' && whiteTimeLeft != null) {
+                setWhiteTimeLeft((prev) => {
+                    const next = (prev ?? 0) - delta;
+                    if (next <= 0) {
+                        clearInterval(timerIntervalRef.current ?? undefined);
+                        timerIntervalRef.current = null;
+                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'BLACK_WINS_ON_TIME', currentFen: chessRef.current.fen() }));
+                        try {
+                            const gs = gameStateRef.current;
+                            handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite, playerBlack: gs.playerBlack, router });
+                        } catch (e) { console.error('handleGameOver error', e); }
+                        return 0;
+                    }
+                    return next;
+                });
+            } else if (side === 'b' && blackTimeLeft != null) {
+                setBlackTimeLeft((prev) => {
+                    const next = (prev ?? 0) - delta;
+                    if (next <= 0) {
+                        clearInterval(timerIntervalRef.current ?? undefined);
+                        timerIntervalRef.current = null;
+                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'WHITE_WINS_ON_TIME', currentFen: chessRef.current.fen() }));
+                        try {
+                            const gs = gameStateRef.current;
+                            handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite, playerBlack: gs.playerBlack, router });
+                        } catch (e) { console.error('handleGameOver error', e); }
+                        return 0;
+                    }
+                    return next;
+                });
+            }
+        };
+
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = window.setInterval(tick, 500);
+
+        return () => {
+            if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+                timerIntervalRef.current = null;
+            }
+            lastTickRef.current = null;
+        };
+    }, [gameState.status]);
 
     if (isOnlineGame && waiting) {
         return (
@@ -309,6 +418,9 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             }
             isGameStarted={true}
             capturedPieces={gameState.capturedPieces}
+            playerPlaying={chessRef.current.turn() === "w" ? "w" : "b"}
+            whiteTimeLeft={whiteTimeLeft}
+            blackTimeLeft={blackTimeLeft}
         />
     );
 };

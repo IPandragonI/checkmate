@@ -2,7 +2,7 @@ import React from "react";
 import {Target, Zap, Timer, Clock} from "lucide-react";
 import {timeModes} from "@/app/types/game";
 
-const getTimeModeIcon = (key: string) => {
+export const getTimeModeIcon = (key: string) => {
     switch (key) {
         case "BULLET":
             return <Target size={14} className="inline-block text-red-500"/>;

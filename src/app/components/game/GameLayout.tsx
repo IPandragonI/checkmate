@@ -5,15 +5,21 @@ import {CapturedPieces, WEIGHT} from "@/app/types/game";
 interface GameLayoutProps {
     chessBoard?: any
     gamePanel?: any
-    isGameStarted?: boolean,
+    isGameStarted?: boolean
     capturedPieces?: CapturedPieces
+    playerPlaying?: 'w' | 'b'
+    whiteTimeLeft?: number | null
+    blackTimeLeft?: number | null
 }
 
 const GameLayout: React.FC<GameLayoutProps> = ({
                                                    chessBoard = <ChessboardWrapper/>,
                                                    gamePanel = null,
                                                    isGameStarted = false,
-                                                   capturedPieces = { white: [], black: [] }
+                                                   capturedPieces = {white: [], black: []},
+                                                   playerPlaying = 'w',
+                                                   whiteTimeLeft,
+                                                   blackTimeLeft,
                                                }) => {
 
     const whitePlayer = gamePanel?.props?.playerWhite ?? gamePanel?.props?.game?.bot;
@@ -39,11 +45,11 @@ const GameLayout: React.FC<GameLayoutProps> = ({
             <div className={`${isGameStarted ? "" : "hidden md:block"} md:w-3/5 w-full h-full flex`}>
                 <div className={`h-full w-full mx-auto flex flex-col items-center justify-center py-8 md:py-0`}>
                     <div className={`w-full ${isGameStarted ? "justify-start md:justify-between" : "justify-center"} w-full flex flex-col items-center gap-2`}>
-                        <GamePlayerInfo isGameStarted={isGameStarted} player={opponent} capturedPieces={opponentCapturedPieces} weightDiff={opponentWeightDiff} isWhite={!isWhite} />
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={opponent} capturedPieces={opponentCapturedPieces} weightDiff={opponentWeightDiff} isWhite={!isWhite} playerPlaying={playerPlaying} whiteTimeLeft={whiteTimeLeft} blackTimeLeft={blackTimeLeft}/>
                         <div className={`${isGameStarted ? "w-[80%]" : "w-[90%]"} aspect-square shadow-lg rounded-lg flex items-center justify-center mx-auto p-2 bg-base-200 border border-gray-200`}>
                             {chessBoard}
                         </div>
-                        <GamePlayerInfo isGameStarted={isGameStarted} player={me} capturedPieces={myCapturedPieces} weightDiff={myWeightDiff} isWhite={isWhite} />
+                        <GamePlayerInfo isGameStarted={isGameStarted} player={me} capturedPieces={myCapturedPieces} weightDiff={myWeightDiff} isWhite={isWhite} playerPlaying={playerPlaying} whiteTimeLeft={whiteTimeLeft} blackTimeLeft={blackTimeLeft}/>
                     </div>
                 </div>
             </div>

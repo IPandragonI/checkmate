@@ -66,11 +66,11 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-base-200 shadow w-full lg:w-1/3">
                     <p className="text-lg font-semibold">{user.name}</p>
                     <div className="avatar placeholder">
-                        <div className="bg-neutral-focus w-24 h-24 flex items-center justify-center text-3xl">
+                        <div className="bg-neutral-focus max-h-32 flex items-center justify-center text-3xl">
                             {user.image ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={user.image} alt="User Avatar"
-                                     className="rounded-full w-24 h-24 object-cover" />
+                                     className="rounded-full object-cover" />
                             ) : (
                                 <span>
                                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
@@ -78,6 +78,13 @@ export default function ProfilePage() {
                             )}
                         </div>
                     </div>
+
+                    {/* Si temps */}
+                    {/*<div>*/}
+                    {/*    <a className="btn btn-secondary btn-sm">*/}
+                    {/*        Changer d'avatar*/}
+                    {/*    </a>*/}
+                    {/*</div>*/}
                 </div>
 
 
@@ -99,6 +106,10 @@ export default function ProfilePage() {
                         <div>
                             <h3 className="font-medium text-slate-500">Email vérifié</h3>
                             <p>{user.emailVerified ? "Oui" : "Non"}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-medium text-slate-500">Inscrit depuis</h3>
+                            <p>{new Date(user.createdAt).toLocaleDateString()}</p>
                         </div>
                     </div>
 

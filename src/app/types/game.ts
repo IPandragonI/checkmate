@@ -4,7 +4,6 @@ export const timeModes: { key: string; label: string; options: { value: string; 
         label: "Bullet",
         options: [
             { value: "1", label: "1 min" },
-            { value: "3", label: "3 min" }
         ]
     },
     {
@@ -29,7 +28,7 @@ export const timeModes: { key: string; label: string; options: { value: string; 
         label: "Classique",
         options: [
             { value: "60", label: "60 min" },
-            { value: "120", label: "120 min" }
+            { value: "0", label: "Illimité" }
         ]
     }
 ];

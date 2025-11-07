@@ -8,6 +8,7 @@ import GameModeField from "@/app/components/field/GameModeField";
 import StartColorField from "@/app/components/field/StartColorField";
 import TimeModeField from "@/app/components/field/TimeModeField";
 import GameCodeField from "@/app/components/field/GameCodeField";
+import { timeModes } from '@/app/types/game';
 
 function generateAccessCode(length = 8) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -93,7 +94,12 @@ const GameForm = () => {
                     </>
                 )}
                 <TimeModeField value={timeLimit} mode={mode} timeMode={timeMode} onChange={e => setTimeLimit(e.target.value)}
-                               setTimeMode={setTimeMode}/>
+                               setTimeMode={(newMode: string) => {
+                                   setTimeMode(newMode);
+                                   const tm = timeModes.find(m => m.key === newMode) || timeModes[0];
+                                   const defaultValue = tm.options[0]?.value || "10";
+                                   setTimeLimit(defaultValue);
+                               }}/>
                 {mode === "online" &&
                     <GameCodeField value={code}/>
                 }

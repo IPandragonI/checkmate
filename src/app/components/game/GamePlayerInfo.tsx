@@ -3,11 +3,14 @@ import {Svg} from "@/app/utils/Svg";
 import {WEIGHT} from "@/app/types/game";
 
 interface GamePlayerInfoProps {
-    isGameStarted?: boolean;
-    player?: any;
-    capturedPieces?: any[];
-    weightDiff?: number;
-    isWhite?: boolean;
+    isGameStarted?: boolean
+    player?: any
+    capturedPieces?: any[]
+    weightDiff?: number
+    isWhite?: boolean
+    playerPlaying?: 'w' | 'b'
+    whiteTimeLeft?: number | null
+    blackTimeLeft?: number | null
 }
 
 function renderCapturedPieces(capturedPieces: any[], isWhite: undefined | boolean) {
@@ -48,7 +51,16 @@ function renderCapturedPieces(capturedPieces: any[], isWhite: undefined | boolea
     });
 }
 
-const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, weightDiff = 0,  isWhite = true}: GamePlayerInfoProps) => {
+const GamePlayerInfo = ({
+                            isGameStarted = false,
+                            player = null,
+                            capturedPieces,
+                            weightDiff = 0,
+                            isWhite = true,
+                            playerPlaying,
+                            whiteTimeLeft,
+                            blackTimeLeft,
+                        }: GamePlayerInfoProps) => {
     return (
         <div className={`${isGameStarted ? "" : "hidden"} w-full flex items-center justify-center`}>
             <div className="w-full p-2 flex items-center gap-4">
@@ -71,10 +83,19 @@ const GamePlayerInfo = ({isGameStarted = false, player = null, capturedPieces, w
                                     {weightDiff > 0 && `+${weightDiff}`}
                                 </span>
                             )}
-                         </div>
+                        </div>
                     </div>
                     <div className="flex items-center bg-base-200 rounded-md px-2 py-1">
-                          <span className="text-sm font-mono">--:--</span>
+                        <span className="text-sm font-mono">
+                            {isWhite
+                                ? whiteTimeLeft
+                                    ? `${Math.floor(whiteTimeLeft / 60000)}:${String(Math.floor((whiteTimeLeft % 60000) / 1000)).padStart(2, '0')}`
+                                    : "∞"
+                                : blackTimeLeft
+                                    ? `${Math.floor(blackTimeLeft / 60000)}:${String(Math.floor((blackTimeLeft % 60000) / 1000)).padStart(2, '0')}`
+                                    : "∞"
+                            }
+                        </span>
                     </div>
                 </div>
             </div>
