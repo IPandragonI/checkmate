@@ -11,7 +11,7 @@ import GameWaiting from "@/app/components/game/panel/GameWaiting";
 import GameLayout from "@/app/components/game/GameLayout";
 import { GameState, Move, Player } from "@/app/types/game";
 import Swal from "sweetalert2";
-import {handleGameOver} from "@/app/games/utils/gameUtils";
+import {getGameResult, handleGameOver} from "@/app/games/utils/gameUtils";
 
 interface GameBoardClientProps {
     initialGame: GameState;
@@ -31,17 +31,42 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const chessRef = useRef(new Chess(initialGame.currentFen));
     const matchAnnouncementShownRef = useRef(false);
 
+    const moveAudioRef = useRef<HTMLAudioElement | null>(null);
+    const captureAudioRef = useRef<HTMLAudioElement | null>(null);
+    const lastMoveByMeRef = useRef(false);
+
+    useEffect(() => {
+        try {
+            moveAudioRef.current = new Audio('/sounds/move-self.mp3');
+            captureAudioRef.current = new Audio('/sounds/capture.mp3');
+
+            if (moveAudioRef.current) moveAudioRef.current.volume = 0.6;
+            if (captureAudioRef.current) captureAudioRef.current.volume = 0.7;
+        } catch (e) {
+            console.warn('Audio init failed', e);
+        }
+    }, []);
+
+    const playMoveSound = (isCapture?: boolean) => {
+        try {
+            const audio = isCapture ? captureAudioRef.current : moveAudioRef.current;
+            if (!audio) return;
+            audio.currentTime = 0;
+            setTimeout(() => {
+                audio.play().catch((e) => {
+                    console.warn('Audio play failed', e);
+                });
+            }, 100);
+        } catch (e) {
+        }
+    };
+
+    const currentTurn = chessRef.current.turn() === "w" ? (gameState.playerWhite?.id || initialGame.bot?.id) : (gameState.playerBlack?.id || initialGame.bot?.id);
+    const [canPlay, setCanPlay] = useState(user?.id === currentTurn && gameState.status === "IN_PROGRESS");
+
     const isBotGame = !!initialGame.bot;
     const isOnlineGame = !isBotGame;
-
-    const orientation: "white" | "black" =
-        user?.id === gameState.playerBlack?.id ? "black" : "white";
-
-    const currentTurn = chessRef.current.turn() === "w"
-        ? (gameState.playerWhite?.id || initialGame.bot?.id)
-        : (gameState.playerBlack?.id || initialGame.bot?.id);
-
-    const canPlay = user?.id === currentTurn && gameState.status === "IN_PROGRESS";
+    const orientation: "white" | "black" = user?.id === gameState.playerBlack?.id ? "black" : "white";
     const isBotTurn = isBotGame && currentTurn === initialGame.bot?.id;
 
     const onGameOver = useCallback((data: { result: string; finalFen: string }) => {
@@ -129,6 +154,13 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     currentFen: move.fen,
                     moves: [...prev.moves, move],
                 }));
+                setCanPlay(true);
+
+                if (lastMoveByMeRef.current) {
+                    lastMoveByMeRef.current = false;
+                } else {
+                    playMoveSound(!!move.capturedPiece);
+                }
             } catch (e) {
                 console.error("Failed to apply move:", e);
             }
@@ -178,7 +210,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot]);
 
     const handleMove = useCallback(
-        async (move: Move) => {
+        async (move: Move, isBotMove: boolean) => {
             if (gameState.status === "FINISHED") return;
             if (isOnlineGame && !canPlay) return;
 
@@ -188,32 +220,14 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                 moveNumber
             };
 
-            debugger
-
             if (isBotGame) {
                 try {
-                    const res = await fetch(`/api/games/${gameState.id}/move`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ move: completeMove }),
-                    });
-
-                    const data = await res.json();
-
-                    if (!res.ok) {
-                        throw new Error(data.error || "Erreur serveur");
-                    }
-
-                    setGameState((prev) => ({
-                        ...prev,
-                        currentFen: move.fen,
-                        moves: [...prev.moves, completeMove],
-                    }));
-
                     const chess = new Chess(move.fen);
                     const isGameOver = chess.isGameOver();
+                    let result;
 
                     if (isGameOver) {
+                        result = getGameResult(chess);
                         handleGameOver({
                             chess,
                             playerWhite: gameState.playerWhite,
@@ -222,18 +236,41 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                         });
                     }
 
+                    const res = await fetch(`/api/games/${gameState.id}/move`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ move: completeMove, isGameOver, result }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || "Erreur serveur");
+                    }
+
+                    setCanPlay(isBotMove);
+
+                    setGameState((prev) => ({
+                        ...prev,
+                        currentFen: move.fen,
+                        moves: [...prev.moves, completeMove],
+                    }));
+
+                    playMoveSound(!!move.capturedPiece);
+
                 } catch (err: any) {
                     console.error("Failed to save bot move:", err);
                     chessRef.current.load(gameState.currentFen);
                     setGameState((prev) => ({ ...prev, currentFen: gameState.currentFen }));
                     Swal.fire("Error", err?.message || "Erreur serveur", "error");
                 }
-            }
-            else {
+            } else {
+                lastMoveByMeRef.current = true;
+                playMoveSound(!!move.capturedPiece);
                 socketRef.current?.emit("move", {
                     gameId: gameState.id,
                     move: completeMove,
                 });
+                setCanPlay(false)
             }
         },
         [isBotGame, canPlay, gameState.id, gameState.moves.length, gameState.currentFen, gameState.status, isOnlineGame, isBotTurn, onGameOver]

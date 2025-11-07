@@ -20,7 +20,7 @@ function generateAccessCode(length = 8) {
 
 const GameForm = () => {
     const [mode, setMode] = useState("online");
-    const [color, setColor] = useState("random");
+    const [color, setColor] = useState("white");
     const [timeLimit, setTimeLimit] = useState("10");
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);

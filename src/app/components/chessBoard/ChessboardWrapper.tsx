@@ -5,12 +5,13 @@ import {Chessboard, PieceDropHandlerArgs, SquareHandlerArgs} from "react-chessbo
 import {getBoardStyles} from "@/app/components/chessBoard/ChessOptions";
 import {Chess, Square} from "chess.js";
 import {Move} from "@/app/types/game";
+import {computeBotMove} from "@/app/games/utils/botEngine";
 
 interface ChessboardWrapperProps {
     boardOrientation?: "white" | "black";
     botElo?: number;
     isOnline?: boolean;
-    onMove?: (move: Move) => void;
+    onMove?: (move: Move, isBotMove: boolean) => void;
     currentFen?: string;
     canPlay?: boolean;
     isStatic?: boolean;
@@ -46,23 +47,30 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             return
         }
 
-        // if (currentFen === DEFAULT_FEN && isBotTurn && botElo && !firstMoveMade) {
-        //     setFirstMoveMade(true);
-        //     setTimeout(makeRandomMove, 500);
-        // }
-    }, [currentFen, firstMoveMade]);
+    }, [currentFen]);
 
-    function makeRandomMove() {
-        const possibleMoves = chessGame.moves();
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const GLOBAL_FLAG = '__checkmate_bot_first_move_done';
+        if ((window as any)[GLOBAL_FLAG]) return;
 
+        if (botElo && !isOnline && !canPlay && isBotTurn && !firstMoveMade && chessGame.fen() === DEFAULT_FEN) {
+            (window as any)[GLOBAL_FLAG] = true;
+            setFirstMoveMade(true);
+            setTimeout(makeBotMove, 500);
+        }
+    }, [botElo, isOnline, canPlay, isBotTurn, firstMoveMade]);
+
+    function makeBotMove() {
         if (chessGame.isGameOver()) {
             return;
         }
 
-        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        const botMove = computeBotMove(chessGame, botElo as number);
 
         const fenBefore = chessGame.fen();
-        const move = chessGame.move(randomMove);
+        const move = chessGame.move(botMove);
+
         const fenAfter = move ? getFenAfterMove(move.from, move.to, fenBefore) : chessGame.fen();
         onMove && onMove({
             from: move?.from,
@@ -70,7 +78,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             promotion: 'q',
             fen: fenAfter as string,
             capturedPiece: move?.captured
-        });
+        }, true);
         setChessPosition(chessGame.fen());
     }
 
@@ -165,7 +173,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                 promotion: 'q',
                 fen: getFenAfterMove(moveFrom as Square, square as Square, fenBefore) as string,
                 capturedPiece: move?.captured
-            });
+            }, false);
         } catch {
             const hasMoveOptions = getMoveOptions(square as Square);
 
@@ -178,7 +186,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
 
         setChessPosition(chessGame.fen());
 
-        if (!isOnline && botElo) setTimeout(makeRandomMove, 300);
+        if (!isOnline && botElo) setTimeout(makeBotMove, 300);
 
         setMoveFrom('');
         setOptionSquares({});
@@ -188,7 +196,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                              sourceSquare,
                              targetSquare
                          }: PieceDropHandlerArgs) {
-        if (!targetSquare) {
+        if (!targetSquare || isStatic || !canPlay) {
             return false;
         }
 
@@ -206,13 +214,13 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                 promotion: 'q',
                 fen: getFenAfterMove(move?.from as Square, move?.to as Square, fenBefore) as string,
                 capturedPiece: move?.captured
-            });
+            }, false);
             setChessPosition(chessGame.fen());
 
             setMoveFrom('');
             setOptionSquares({});
 
-            if (!isOnline && botElo) setTimeout(makeRandomMove, 500);
+            if (!isOnline && botElo) setTimeout(makeBotMove, 500);
 
             return true;
         } catch {

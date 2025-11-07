@@ -8,7 +8,7 @@ export async function POST(
     try {
         const resolved = await params;
         const gameId = resolved.gameId;
-        const { move } = await request.json();
+        const { move, isGameOver, result } = await request.json();
 
         const gameState = await GameService.getGameState(gameId);
         if (!gameState) {
@@ -20,6 +20,9 @@ export async function POST(
         }
 
         await GameService.saveMove(gameId, move);
+        if (isGameOver) {
+            await GameService.finishGame(gameId, result);
+        }
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error in bot move:", error);

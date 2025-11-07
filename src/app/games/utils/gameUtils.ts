@@ -55,5 +55,5 @@ export async function handleGameOver({chess, playerWhite, playerBlack, router}: 
                 router.push("/");
             }
         });
-    }, 500);
+    }, 1000);
 }
