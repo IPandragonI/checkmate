@@ -73,13 +73,13 @@ const GameInfos: React.FC<GameInfosProps> = ({
             ) : (
                 <div className="hidden md:flex tabs tabs-lift w-full h-3/6">
                     <input type="radio" name="my_tabs_3" className="tab" aria-label="Coups" defaultChecked/>
-                    <div className="tab-content bg-base-100 p-6 h-16">
+                    <div className="tab-content bg-base-100 p-6 overflow-y-auto h-full">
                         <MoveList moves={moves}/>
                     </div>
                     {!game.bot && (
                         <>
                             <input type="radio" name="my_tabs_3" className="tab" aria-label="Messages"/>
-                            <div className="tab-content bg-base-100 p-6 h-16">
+                            <div className="tab-content bg-base-100 p-6 overflow-y-auto h-full">
                                 <GameChat socket={socket} gameId={game.id} user={user}
                                           chatMessages={chatMessages || []}/>
                             </div>

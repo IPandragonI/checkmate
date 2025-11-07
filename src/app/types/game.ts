@@ -40,7 +40,7 @@ export interface Move {
     promotion?: string;
     capturedPiece?: string;
     fen: string;
-    moveNumber: number;
+    moveNumber?: number;
     timestamp?: Date;
 }
 

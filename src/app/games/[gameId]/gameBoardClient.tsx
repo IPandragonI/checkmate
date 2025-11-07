@@ -44,28 +44,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const canPlay = user?.id === currentTurn && gameState.status === "IN_PROGRESS";
     const isBotTurn = isBotGame && currentTurn === initialGame.bot?.id;
 
-    const applyMove = useCallback((move: Move) => {
-        setGameState((prev) => {
-            const newMoves = [...prev.moves, move];
-            const capturedPieces = { ...prev.capturedPieces };
-
-            if (move.capturedPiece) {
-                const capturingColor = chessRef.current.turn() === "w" ? "black" : "white";
-                capturedPieces[capturingColor] = [
-                    ...capturedPieces[capturingColor],
-                    move.capturedPiece,
-                ];
-            }
-
-            return {
-                ...prev,
-                currentFen: move.fen,
-                moves: newMoves,
-                capturedPieces,
-            };
-        });
-    }, []);
-
     const onGameOver = useCallback((data: { result: string; finalFen: string }) => {
         console.log("Game over:", data);
 
@@ -91,7 +69,19 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     }, [gameState.playerBlack, gameState.playerWhite, router]);
 
     useEffect(() => {
-        if (!user?.id || isBotGame) return;
+        if (!user?.id) return;
+
+        if (gameState.status === "FINISHED") {
+            handleGameOver({
+                chess: chessRef.current,
+                playerWhite: gameState.playerWhite,
+                playerBlack: gameState.playerBlack,
+                router,
+            });
+            return;
+        }
+
+        if (isBotGame) return;
 
         const socket = getSocket(user.id);
         socketRef.current = socket;
@@ -134,12 +124,11 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             console.log("Received move:", move);
 
             try {
-                chessRef.current.move({
-                    from: move.from,
-                    to: move.to,
-                    promotion: move.promotion,
-                });
-                applyMove(move);
+                setGameState((prev) => ({
+                    ...prev,
+                    currentFen: move.fen,
+                    moves: [...prev.moves, move],
+                }));
             } catch (e) {
                 console.error("Failed to apply move:", e);
             }
@@ -165,7 +154,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             socket.off("gameOver", onGameOver);
             socket.off("error", onError);
         };
-    }, [user?.id, isBotGame, gameState.id, onGameOver, applyMove, matchAnnounced]);
+    }, [user?.id, isBotGame, gameState.id, onGameOver, matchAnnounced]);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
@@ -189,37 +178,20 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot]);
 
     const handleMove = useCallback(
-        async (move: Omit<Move, "fen" | "moveNumber">) => {
+        async (move: Move) => {
             if (gameState.status === "FINISHED") return;
             if (isOnlineGame && !canPlay) return;
-            if (isBotGame && isBotTurn) return;
 
             const moveNumber = gameState.moves.length + 1;
-
-            const chess = new Chess(chessRef.current.fen());
-            const result = chess.move({
-                from: move.from,
-                to: move.to,
-                promotion: move.promotion || "q",
-            });
-
-            if (!result) {
-                console.error("Invalid move");
-                return;
-            }
-
             const completeMove: Move = {
                 ...move,
-                fen: chess.fen(),
-                moveNumber,
-                capturedPiece: result.captured,
+                moveNumber
             };
+
+            debugger
 
             if (isBotGame) {
                 try {
-                    chessRef.current.move(result);
-                    applyMove(completeMove);
-
                     const res = await fetch(`/api/games/${gameState.id}/move`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -232,28 +204,24 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                         throw new Error(data.error || "Erreur serveur");
                     }
 
-                    if (data.botMove) {
-                        setTimeout(() => {
-                            chessRef.current.move({
-                                from: data.botMove.from,
-                                to: data.botMove.to,
-                                promotion: data.botMove.promotion,
-                            });
-                            applyMove(data.botMove);
+                    setGameState((prev) => ({
+                        ...prev,
+                        currentFen: move.fen,
+                        moves: [...prev.moves, completeMove],
+                    }));
 
-                            if (data.gameOver) {
-                                onGameOver({
-                                    result: data.result,
-                                    finalFen: data.botMove.fen,
-                                });
-                            }
-                        }, 500);
-                    } else if (data.gameOver) {
-                        onGameOver({
-                            result: data.result,
-                            finalFen: completeMove.fen,
+                    const chess = new Chess(move.fen);
+                    const isGameOver = chess.isGameOver();
+
+                    if (isGameOver) {
+                        handleGameOver({
+                            chess,
+                            playerWhite: gameState.playerWhite,
+                            playerBlack: gameState.playerBlack,
+                            router,
                         });
                     }
+
                 } catch (err: any) {
                     console.error("Failed to save bot move:", err);
                     chessRef.current.load(gameState.currentFen);
@@ -262,16 +230,13 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                 }
             }
             else {
-                chessRef.current.move(result);
-                applyMove(completeMove);
-
                 socketRef.current?.emit("move", {
                     gameId: gameState.id,
                     move: completeMove,
                 });
             }
         },
-        [isBotGame, canPlay, gameState.id, gameState.moves.length, gameState.currentFen, gameState.status, isOnlineGame, isBotTurn, applyMove, onGameOver]
+        [isBotGame, canPlay, gameState.id, gameState.moves.length, gameState.currentFen, gameState.status, isOnlineGame, isBotTurn, onGameOver]
     );
 
     if (isOnlineGame && waiting) {
@@ -285,7 +250,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             chessBoard={
                 <ChessboardWrapper
                     boardOrientation={orientation}
-                    boardState={gameState.currentFen}
+                    currentFen={gameState.currentFen}
                     onMove={handleMove}
                     canPlay={canPlay}
                     isStatic={false}

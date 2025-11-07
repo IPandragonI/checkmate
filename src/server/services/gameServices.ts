@@ -110,7 +110,7 @@ export class GameService {
             prisma.move.create({
                 data: {
                     gameId,
-                    moveNumber: move.moveNumber,
+                    moveNumber: move.moveNumber || 1,
                     from: move.from,
                     to: move.to,
                     promotion: move.promotion || null,

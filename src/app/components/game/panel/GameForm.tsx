@@ -56,17 +56,6 @@ const GameForm = () => {
             const data = await res.json();
             if (!res.ok || !data.gameId) throw new Error(data.error || "Erreur lors de la création de la partie");
             router.push(`/games/${data.gameId}`);
-            if (mode === "bot") {
-                if (color === "white") return;
-                const botMoveRes = await fetch(`/api/games/${data.gameId}/bot-move`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                });
-                const botMoveData = await botMoveRes.json();
-                if (!botMoveRes.ok) {
-                    console.error("Erreur lors du coup du bot:", botMoveData.error);
-                }
-            }
             if (mode === "online") {
                 try {
                     await navigator.clipboard.writeText(code);
