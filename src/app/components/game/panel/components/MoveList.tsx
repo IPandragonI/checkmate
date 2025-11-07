@@ -1,6 +1,5 @@
 import React from "react";
-
-import { Move } from "@/app/components/chessBoard/ChessboardWrapper";
+import {Move} from "@/app/types/game";
 interface MoveListProps {
     moves: Move[];
 }
