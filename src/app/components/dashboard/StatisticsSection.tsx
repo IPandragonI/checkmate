@@ -1,6 +1,6 @@
 import {Award, Heart, Swords} from "lucide-react";
-import {timeModes} from "@/app/components/field/TimeModeField";
 import {GameResult} from "@prisma/client";
+import {timeModes} from "@/app/types/game";
 
 function StatisticsSection({gameHistory, user}: { gameHistory?: any[], user?: any }) {
     if (!gameHistory || gameHistory.length === 0) {

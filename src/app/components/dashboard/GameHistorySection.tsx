@@ -1,4 +1,4 @@
-import {timeModes} from "@/app/components/field/TimeModeField";
+import {timeModes} from "@/app/types/game";
 import {Svg} from "@/app/utils/Svg";
 import {GameResult} from "@prisma/client";
 
@@ -36,7 +36,7 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                     return (
                         <tr key={game.id || idx}>
                             <td className="py-2 px-2 flex flex-col items-center justify-center">
-                                {modeObj.icon}
+                                {/*{modeObj.icon}*/}
                                 <span className="text-xs mt-1">{modeObj.label}</span>
                             </td>
                             <td className="py-2 px-2">
