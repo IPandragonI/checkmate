@@ -22,9 +22,7 @@ export async function GET(req: NextRequest) {
             playerBlack: {
                 select: {id: true, name: true},
             },
-            bot: {
-                select: {id: true, name: true},
-            },
+            bot: true,
         },
     });
     if (!res) {

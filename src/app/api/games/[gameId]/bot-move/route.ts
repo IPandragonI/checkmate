@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import { GameService } from "@/server/services/gameServices";
 import { ChessEngine } from "@/app/components/chessBoard/ChessEngine";
 
-export async function POST(request: Request, { params }: { params: { gameId: string } }) {
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ gameId: string }> }
+) {
     try {
-        const gameId = await params?.gameId;
+        const resolved = await params;
+        const gameId = resolved.gameId;
         if (!gameId) {
             return NextResponse.json({ error: "Missing gameId in route parameters" }, { status: 400 });
         }
