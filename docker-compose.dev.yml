@@ -1,0 +1,24 @@
+name: checkmate_dev
+
+services:
+  db:
+    image: postgres:15
+    container_name: chess_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mailer:
+    image: mailhog/mailhog
+    container_name: chess_mailer
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  postgres_data:
