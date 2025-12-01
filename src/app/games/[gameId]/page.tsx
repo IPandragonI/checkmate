@@ -1,5 +1,5 @@
 import React from "react";
-import { GameBoardClient } from "@/app/games/[gameId]/gameBoardClient";
+import {GameBoard} from "@/app/games/[gameId]/gameBoardClient";
 import {GameService} from "@/server/services/gameServices";
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +18,6 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
     }
 
     return (
-        <GameBoardClient initialGame={game} />
+        <GameBoard initialGame={game} />
     );
 }

@@ -13,11 +13,11 @@ import { GameState, Move, Player } from "@/app/types/game";
 import Swal from "sweetalert2";
 import {getGameResult, handleGameOver} from "@/app/games/utils/gameUtils";
 
-interface GameBoardClientProps {
+interface GameBoardProps {
     initialGame: GameState;
 }
 
-const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
     const { data: session } = useSession();
     const user = session?.user;
     const router = useRouter();
@@ -452,5 +452,4 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     );
 };
 
-// @ts-ignore
-export { GameBoardClient };
+export { GameBoard };
