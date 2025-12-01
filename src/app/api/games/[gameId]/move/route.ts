@@ -8,7 +8,7 @@ export async function POST(
     try {
         const resolved = await params;
         const gameId = resolved.gameId;
-        const { move, isGameOver, result } = await request.json();
+        const { move, isGameOver, result, userPlayingId } = await request.json();
 
         const gameState = await GameService.getGameState(gameId);
         if (!gameState) {
@@ -21,7 +21,7 @@ export async function POST(
 
         await GameService.saveMove(gameId, move);
         if (isGameOver) {
-            await GameService.finishGame(gameId, result, gameState.bot.id);
+            await GameService.finishGame(gameId, result, userPlayingId);
         }
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -31,9 +31,8 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                     if (game.status !== 'FINISHED') return null;
                     const playerWhite = game.playerWhite ? game.playerWhite : game.bot;
                     const playerBlack = game.playerBlack ? game.playerBlack : game.bot;
-                    const gameResultForUser = (game.playerWhiteId === user?.id && game.result === GameResult.WHITE_WIN) ||
-                        (game.playerBlackId === user?.id && game.result === GameResult.BLACK_WIN) ? 'WIN' :
-                        (game.result === GameResult.WHITE_WIN ? 'LOSS' : 'DRAW');
+                    const gameResultForUser = (game.winnerId === user?.id) ? 'WIN' :
+                        (game.winnerId && game.winnerId !== user?.id) ? 'LOSS' : 'DRAW';
                     const modeIcon = getTimeModeIcon(modeObj.key);
                     return (
                         <tr key={game.id || idx}>

@@ -76,7 +76,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const isBotTurn = isBotGame && currentTurn === initialGame.bot?.id;
 
     const onGameOver = useCallback((data: { result: string; finalFen: string }) => {
-        console.log("Game over:", data);
 
         setGameState((prev) => ({
             ...prev,
@@ -166,10 +165,10 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     currentFen: move.fen,
                     moves: [...prev.moves, move],
                     capturedPieces: {
-                        white: move.capturedPiece && chessRef.current.turn() === "b"
+                        white: move.capturedPiece && chessRef.current.turn() === "w"
                             ? [...prev.capturedPieces.white, move.capturedPiece]
                             : prev.capturedPieces.white,
-                        black: move.capturedPiece && chessRef.current.turn() === "w"
+                        black: move.capturedPiece && chessRef.current.turn() === "b"
                             ? [...prev.capturedPieces.black, move.capturedPiece]
                             : prev.capturedPieces.black,
                     },
@@ -236,7 +235,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot]);
 
     const handleMove = useCallback(
-        async (move: Move) => {
+        async (move: Move, isBotMove: boolean) => {
             if (gameState.status === "FINISHED") return;
             if (isOnlineGame && !canPlay) return;
 
@@ -266,7 +265,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     const res = await fetch(`/api/games/${gameState.id}/move`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ move: completeMove, isGameOver, result }),
+                        body: JSON.stringify({ move: completeMove, isGameOver, result, userPlayingId: isBotMove ? initialGame.bot?.id : user?.id }),
                     });
 
                     const data = await res.json();
@@ -279,10 +278,10 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                         currentFen: move.fen,
                         moves: [...prev.moves, completeMove],
                         capturedPieces: {
-                            white: move.capturedPiece && chessRef.current.turn() === "b"
+                            white: move.capturedPiece && chessRef.current.turn() === "w"
                                 ? [...prev.capturedPieces.white, move.capturedPiece]
                                 : prev.capturedPieces.white,
-                            black: move.capturedPiece && chessRef.current.turn() === "w"
+                            black: move.capturedPiece && chessRef.current.turn() === "b"
                                 ? [...prev.capturedPieces.black, move.capturedPiece]
                                 : prev.capturedPieces.black,
                         },
@@ -292,40 +291,9 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
 
                     playMoveSound(!!move.capturedPiece);
 
-                    if (data.botMove) {
-                        setTimeout(() => {
-                            try {
-                                chessRef.current.move({
-                                    from: data.botMove.from,
-                                    to: data.botMove.to,
-                                    promotion: data.botMove.promotion,
-                                });
-                            } catch (e) {}
-                            setGameState((prev) => ({
-                                ...prev,
-                                currentFen: data.botMove.fen,
-                                moves: [...prev.moves, data.botMove],
-                                capturedPieces: {
-                                    white: data.botMove.capturedPiece && chessRef.current.turn() === "b"
-                                        ? [...prev.capturedPieces.white, data.botMove.capturedPiece]
-                                        : prev.capturedPieces.white,
-                                    black: data.botMove.capturedPiece && chessRef.current.turn() === "w"
-                                        ? [...prev.capturedPieces.black, data.botMove.capturedPiece]
-                                        : prev.capturedPieces.black,
-                                },
-                            }));
-                            lastTickRef.current = Date.now();
-                            playMoveSound(!!data.botMove.capturedPiece);
-                            setCanPlay(true);
-
-                            if (data.gameOver) {
-                                onGameOver({ result: data.result, finalFen: data.botMove.fen });
-                            }
-                        }, 500);
-                    } else {
-                        if (!data.gameOver) setCanPlay(true);
+                    if (isBotMove) {
+                        setCanPlay(true);
                     }
-
                 } catch (err: any) {
                     console.error("Failed to save bot move:", err);
                     chessRef.current.load(gameState.currentFen);
@@ -344,7 +312,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                 setCanPlay(false)
             }
         },
-        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, router, onGameOver, user?.id]
+        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, router, user?.id]
     );
 
     useEffect(() => { gameStateRef.current = gameState; }, [gameState]);

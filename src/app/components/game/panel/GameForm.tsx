@@ -90,9 +90,9 @@ const GameForm = () => {
                 {mode === "bot" && (
                     <>
                         <BotSelector botId={botId} setBotId={setBotId}/>
-                        <StartColorField color={color} onClick={() => setColor("white")} onClick1={() => setColor("black")} onClick2={() => setColor("random")}/>
                     </>
                 )}
+                <StartColorField color={color} onClick={() => setColor("white")} onClick1={() => setColor("black")} onClick2={() => setColor("random")}/>
                 <TimeModeField value={timeLimit} mode={mode} timeMode={timeMode} onChange={e => setTimeLimit(e.target.value)}
                                setTimeMode={(newMode: string) => {
                                    setTimeMode(newMode);

@@ -25,13 +25,9 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
                     let opponent = isWhite ? game.playerBlack : game.playerWhite;
                     if (!opponent) opponent = game.bot;
                     const couleur = isWhite ? 'Blanc' : 'Noir';
-                    const timeLimit = game.timeLimit ? Math.floor(game.timeLimit / 60000) : '∞';
                     return (
                         <li key={game.id} className="flex flex-col gap-2 p-3 rounded-xl bg-base-100 shadow">
                             <div className="flex justify-between items-center xl:flex-col xl:items-start">
-                                <div className="flex gap-2 items-center">
-                                    <div className="font-semibold " >{timeLimit} min</div>
-                                </div>
                                 <span className="text-xs text-gray-500">{game.createdAt ? new Date(game.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
                             </div>
                             <div className="flex justify-between items-center">
