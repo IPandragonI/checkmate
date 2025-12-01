@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production next start",
+    "start": "NODE_ENV=production tsx server.ts",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",
