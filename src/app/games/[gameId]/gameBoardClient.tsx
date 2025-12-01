@@ -31,6 +31,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     const [blackTimeLeft, setBlackTimeLeft] = useState<number | null>(initialGame.blackTimeLeft);
 
     const socketRef = useRef<any>(null);
+    const joinRef = useRef(false);
     const chessRef = useRef(new Chess(initialGame.currentFen));
     const matchAnnouncementShownRef = useRef(false);
     const gameStateRef = useRef<GameState>(initialGame);
@@ -116,7 +117,8 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
         const socket = getSocket(user.id);
         socketRef.current = socket;
 
-        const onConnect = () => {
+        if (!joinRef.current) {
+            joinRef.current = true;
             socket.emit("join", { gameId: gameState.id, userId: user.id });
         }
 
@@ -196,7 +198,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             Swal.fire("Error", message, "error");
         };
 
-        socket.on("connect", onConnect);
         socket.on("waiting", onWaiting);
         socket.on("start", onStart);
         socket.on("move", onMove);
@@ -204,7 +205,6 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
         socket.on("error", onError);
 
         return () => {
-            socket.off("connect", onConnect);
             socket.off("waiting", onWaiting);
             socket.off("start", onStart);
             socket.off("move", onMove);
@@ -452,4 +452,5 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
     );
 };
 
+// @ts-ignore
 export { GameBoardClient };
