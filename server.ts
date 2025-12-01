@@ -5,7 +5,7 @@ import {GameService} from "@/server/services/gameServices";
 import {ServerToClientEvents, ClientToServerEvents} from "@/app/types/game";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "0.0.0.0"
+const hostname = "localhost";
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
@@ -103,7 +103,7 @@ app.prepare().then(() => {
             }
         });
 
-        socket.on("move", async ({gameId, move}) => {
+        socket.on("move", async ({gameId, move, userId}) => {
             try {
                 const gameState = await GameService.getGameState(gameId);
                 if (!gameState) {
@@ -131,7 +131,7 @@ app.prepare().then(() => {
                 const gameOverCheck = GameService.checkGameOver(validation.newFen!);
 
                 if (gameOverCheck.isOver) {
-                    await GameService.finishGame(gameId, gameOverCheck.result!);
+                    await GameService.finishGame(gameId, gameOverCheck.result!, userId);
                     io.to(gameId).emit("gameOver", {
                         result: gameOverCheck.result!,
                         finalFen: validation.newFen!,

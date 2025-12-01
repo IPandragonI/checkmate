@@ -61,6 +61,18 @@ const GamePlayerInfo = ({
                             whiteTimeLeft,
                             blackTimeLeft,
                         }: GamePlayerInfoProps) => {
+    console.log(playerPlaying)
+
+    const displayedTimeMs = isWhite ? whiteTimeLeft : blackTimeLeft;
+    const formatTime = (ms?: number | null) => {
+        if (ms == null) return "00:00";
+        const mm = Math.floor(ms / 60000);
+        const ss = Math.floor((ms % 60000) / 1000);
+        return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    };
+
+    const isActive = (playerPlaying === 'w' && isWhite) || (playerPlaying === 'b' && !isWhite);
+
     return (
         <div className={`${isGameStarted ? "" : "hidden"} w-full flex items-center justify-center`}>
             <div className="w-full p-2 flex items-center gap-4">
@@ -85,18 +97,14 @@ const GamePlayerInfo = ({
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center bg-base-200 rounded-md px-2 py-1">
-                        <span className="text-sm font-mono">
-                            {isWhite
-                                ? whiteTimeLeft
-                                    ? `${Math.floor(whiteTimeLeft / 60000)}:${String(Math.floor((whiteTimeLeft % 60000) / 1000)).padStart(2, '0')}`
-                                    : "∞"
-                                : blackTimeLeft
-                                    ? `${Math.floor(blackTimeLeft / 60000)}:${String(Math.floor((blackTimeLeft % 60000) / 1000)).padStart(2, '0')}`
-                                    : "∞"
-                            }
-                        </span>
-                    </div>
+                    {whiteTimeLeft != null && blackTimeLeft != null && (
+                        <div className={`${isActive ? 'bg-primary text-white' : 'bg-base-200 text-gray-800'} flex items-center rounded-md px-2 py-1` }>
+                            {isActive && <span className="w-2 h-2 rounded-full mr-2" style={{background: 'rgba(255,255,255,0.9)', boxShadow: '0 0 6px rgba(255,255,255,0.6)'}} />}
+                            <span className="text-sm font-mono tabular-nums font-bold" style={{minWidth: 56, textAlign: 'center'}}>
+                                {formatTime(displayedTimeMs)}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

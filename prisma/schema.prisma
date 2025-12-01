@@ -88,16 +88,17 @@ model Game {
   bot   Bot?    @relation(fields: [botId], references: [id])
   botId String?
 
-  status GameStatus  @default(WAITING)
-  result GameResult?
+  status   GameStatus  @default(WAITING)
+  result   GameResult?
+  winnerId String?
 
   timeMode      TimeMode @default(RAPID)
   timeLimit     Int?
   whiteTimeLeft Int?
   blackTimeLeft Int?
 
-  currentFen String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-  capturedPieces Json @default("{\"white\":[],\"black\":[]}")
+  currentFen     String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  capturedPieces Json   @default("{\"white\":[],\"black\":[]}")
 
   createdAt  DateTime      @default(now())
   finishedAt DateTime?
@@ -108,8 +109,8 @@ model Game {
 }
 
 model Move {
-  id         String   @id @default(uuid())
-  game       Game     @relation(fields: [gameId], references: [id])
+  id         String  @id @default(uuid())
+  game       Game    @relation(fields: [gameId], references: [id])
   gameId     String
   moveNumber Int
   from       String
@@ -118,8 +119,8 @@ model Move {
 
   capturedPiece String?
 
-  fen        String
-  timestamp  DateTime @default(now())
+  fen       String
+  timestamp DateTime @default(now())
 
   @@index([gameId, moveNumber])
 }
@@ -154,7 +155,7 @@ model UserPreference {
 
 model Bot {
   id        String   @id @default(uuid())
-  username      String   @unique
+  username  String   @unique
   label     String
   elo       Int
   img       String

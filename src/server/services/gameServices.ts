@@ -162,12 +162,14 @@ export class GameService {
      */
     static async finishGame(
         gameId: string,
-        result: string
+        result: string,
+        winnerId?: string
     ): Promise<void> {
         await prisma.game.update({
             where: { id: gameId },
             data: {
                 status: "FINISHED",
+                winnerId: winnerId || null,
                 result: result as any,
                 finishedAt: new Date(),
             },

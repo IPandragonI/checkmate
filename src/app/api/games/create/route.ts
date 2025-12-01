@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         let playerWhiteId;
         let playerBlackId;
 
-        const timeLimitInMs = parseInt(timeLimit, 10) * 60000;
+        const timeLimitInMs = timeLimit ? parseInt(timeLimit, 10) * 60000 : null
 
         if (mode === "bot") {
             if (color === "white") {

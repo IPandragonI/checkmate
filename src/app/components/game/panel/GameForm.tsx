@@ -105,7 +105,7 @@ const GameForm = () => {
                 }
             </div>
             <div>
-                <button className={`btn ${mode === 'bot' ? 'btn-secondary' : 'btn-primary'} w-full`} type="submit" disabled={loading}>
+                <button className={`btn ${mode === 'bot' ? 'btn-secondary' : 'btn-primary'} w-full`} type="submit" disabled={loading || (mode === "bot" && !botId)}>
                     {loading ? <span className="loading loading-spinner loading-sm mr-2"></span> : null}
                     Créer la partie
                 </button>

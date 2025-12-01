@@ -15,8 +15,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ gam
     } catch (e) {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
-    const { result, moves, chatMessages, finishedAt } = data;
-    if (!result || !moves || !finishedAt) {
+    const { result, winnerId } = data;
+    if (!result || !winnerId) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     try {
@@ -24,9 +24,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ gam
             where: { id: gameId },
             data: {
                 result,
-                moves,
-                messages: chatMessages,
-                finishedAt: new Date(finishedAt),
+                winnerId: winnerId || null,
+                finishedAt: new Date(),
                 status: "FINISHED"
             },
         });

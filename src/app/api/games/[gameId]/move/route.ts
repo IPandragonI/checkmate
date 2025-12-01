@@ -21,7 +21,7 @@ export async function POST(
 
         await GameService.saveMove(gameId, move);
         if (isGameOver) {
-            await GameService.finishGame(gameId, result);
+            await GameService.finishGame(gameId, result, gameState.bot.id);
         }
         return NextResponse.json({ success: true });
     } catch (error) {

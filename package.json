@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "NODE_ENV=production next start",
     "lint": "eslint",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
   },
   "type": "module",
   "dependencies": {

@@ -165,6 +165,14 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     ...prev,
                     currentFen: move.fen,
                     moves: [...prev.moves, move],
+                    capturedPieces: {
+                        white: move.capturedPiece && chessRef.current.turn() === "b"
+                            ? [...prev.capturedPieces.white, move.capturedPiece]
+                            : prev.capturedPieces.white,
+                        black: move.capturedPiece && chessRef.current.turn() === "w"
+                            ? [...prev.capturedPieces.black, move.capturedPiece]
+                            : prev.capturedPieces.black,
+                    },
                 }));
                 try {
                     chessRef.current.load(move.fen);
@@ -204,7 +212,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             socket.off("gameOver", onGameOver);
             socket.off("error", onError);
         };
-    }, [user?.id, isBotGame, gameState.id, onGameOver, matchAnnounced]);
+    }, [user?.id, isBotGame, gameState.id, onGameOver, matchAnnounced, gameState.playerWhite, gameState.playerBlack, gameState.status, router]);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
@@ -270,6 +278,14 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                         ...prev,
                         currentFen: move.fen,
                         moves: [...prev.moves, completeMove],
+                        capturedPieces: {
+                            white: move.capturedPiece && chessRef.current.turn() === "b"
+                                ? [...prev.capturedPieces.white, move.capturedPiece]
+                                : prev.capturedPieces.white,
+                            black: move.capturedPiece && chessRef.current.turn() === "w"
+                                ? [...prev.capturedPieces.black, move.capturedPiece]
+                                : prev.capturedPieces.black,
+                        },
                     }));
                     try { chessRef.current.load(move.fen); } catch {}
                     lastTickRef.current = Date.now();
@@ -289,6 +305,14 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                                 ...prev,
                                 currentFen: data.botMove.fen,
                                 moves: [...prev.moves, data.botMove],
+                                capturedPieces: {
+                                    white: data.botMove.capturedPiece && chessRef.current.turn() === "b"
+                                        ? [...prev.capturedPieces.white, data.botMove.capturedPiece]
+                                        : prev.capturedPieces.white,
+                                    black: data.botMove.capturedPiece && chessRef.current.turn() === "w"
+                                        ? [...prev.capturedPieces.black, data.botMove.capturedPiece]
+                                        : prev.capturedPieces.black,
+                                },
                             }));
                             lastTickRef.current = Date.now();
                             playMoveSound(!!data.botMove.capturedPiece);
@@ -315,11 +339,12 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                 socketRef.current?.emit("move", {
                     gameId: gameState.id,
                     move: completeMove,
+                    userId: user?.id,
                 });
                 setCanPlay(false)
             }
         },
-        [isBotGame, canPlay, gameState.id, gameState.moves.length, gameState.currentFen, gameState.status, isOnlineGame, isBotTurn, onGameOver]
+        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, router, onGameOver, user?.id]
     );
 
     useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
@@ -346,11 +371,28 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     if (next <= 0) {
                         clearInterval(timerIntervalRef.current ?? undefined);
                         timerIntervalRef.current = null;
-                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'BLACK_WINS_ON_TIME', currentFen: chessRef.current.fen() }));
-                        try {
-                            const gs = gameStateRef.current;
-                            handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite, playerBlack: gs.playerBlack, router });
-                        } catch (e) { console.error('handleGameOver error', e); }
+                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'TIMEOUT', currentFen: chessRef.current.fen() }));
+                        (async () => {
+                            try {
+                                const gs = gameStateRef.current;
+                                if (gs.status === 'FINISHED') return;
+
+                                const res = await fetch(`/api/games/${gs.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ result: 'TIMEOUT', winnerId: gs.playerBlack ? gs.playerBlack.id : gs.bot?.id }),
+                                });
+
+                                if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}));
+                                    console.error('Failed to notify server about timeout (black wins):', err);
+                                }
+
+                                handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite, playerBlack: gs.playerBlack ? gs.playerBlack : gs.bot, router });
+                            } catch (e) {
+                                console.error('Error while notifying server about timeout (black wins):', e);
+                            }
+                        })();
                         return 0;
                     }
                     return next;
@@ -361,11 +403,28 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
                     if (next <= 0) {
                         clearInterval(timerIntervalRef.current ?? undefined);
                         timerIntervalRef.current = null;
-                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'WHITE_WINS_ON_TIME', currentFen: chessRef.current.fen() }));
-                        try {
-                            const gs = gameStateRef.current;
-                            handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite, playerBlack: gs.playerBlack, router });
-                        } catch (e) { console.error('handleGameOver error', e); }
+                        setGameState((prevState) => ({ ...prevState, status: 'FINISHED', result: 'TIMEOUT', currentFen: chessRef.current.fen() }));
+                        (async () => {
+                            try {
+                                const gs = gameStateRef.current;
+                                if (gs.status === 'FINISHED') return;
+
+                                const res = await fetch(`/api/games/${gs.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ winnerId: gs.playerWhite ? gs.playerWhite.id : gs.bot?.id, result: 'TIMEOUT' }),
+                                });
+
+                                if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}));
+                                    console.error('Failed to notify server about timeout (white wins):', err);
+                                }
+
+                                handleGameOver({ chess: chessRef.current, playerWhite: gs.playerWhite ? gs.playerWhite : gs.bot, playerBlack: gs.playerBlack, router });
+                            } catch (e) {
+                                console.error('Error while notifying server about timeout (white wins):', e);
+                            }
+                        })();
                         return 0;
                     }
                     return next;
@@ -383,7 +442,7 @@ const GameBoardClient: React.FC<GameBoardClientProps> = ({ initialGame }) => {
             }
             lastTickRef.current = null;
         };
-    }, [gameState.status]);
+    }, [gameState.status, whiteTimeLeft, blackTimeLeft, router]);
 
     if (isOnlineGame && waiting) {
         return (

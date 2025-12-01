@@ -128,7 +128,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                square,
                                piece
                            }: SquareHandlerArgs) {
-        debugger
         if (isStatic) return;
 
         if (!canPlay) {

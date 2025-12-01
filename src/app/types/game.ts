@@ -1,4 +1,4 @@
-export const timeModes: { key: string; label: string; options: { value: string; label: string }[] }[] = [
+export const timeModes: { key: string; label: string; options: { value: string|undefined; label: string }[] }[] = [
     {
         key: "BULLET",
         label: "Bullet",
@@ -28,7 +28,7 @@ export const timeModes: { key: string; label: string; options: { value: string; 
         label: "Classique",
         options: [
             { value: "60", label: "60 min" },
-            { value: "0", label: "Illimité" }
+            { value: undefined, label: "Illimité" }
         ]
     }
 ];
@@ -104,7 +104,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     join: (data: { gameId: string; userId: string }) => void;
-    move: (data: { gameId: string; move: Move }) => void;
+    move: (data: { gameId: string; move: Move, userId: string }) => void;
     messageSend: (data: { gameId: string; chatMessage: ChatMessage }) => void;
 }
 

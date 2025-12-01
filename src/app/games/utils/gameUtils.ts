@@ -23,6 +23,8 @@ export function getGameResultString(result: GameResult): string {
             return "Pat";
         case GameResult.REPETITION:
             return "Répétition";
+        case GameResult.TIMEOUT:
+            return "Temps écoulé";
         default:
             return "Nulle";
     }
@@ -36,7 +38,7 @@ export interface GameOverHandlerProps {
 }
 
 export async function handleGameOver({chess, playerWhite, playerBlack, router}: GameOverHandlerProps) {
-    const result = getGameResult(chess) || GameResult.DRAW;
+    const result = getGameResult(chess) || GameResult.TIMEOUT;
     const resultString = getGameResultString(result);
     const winner = chess.turn() === 'w' ? playerBlack : playerWhite;
 
