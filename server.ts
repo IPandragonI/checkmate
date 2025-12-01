@@ -5,8 +5,8 @@ import {GameService} from "@/server/services/gameServices";
 import {ServerToClientEvents, ClientToServerEvents} from "@/app/types/game";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 3000;
+const hostname = "0.0.0.0"
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
 
@@ -20,7 +20,8 @@ app.prepare().then(() => {
         cors: {
             origin: [
                 "http://localhost:3000",
-                "https://checkmate-io.up.railway.app"
+                "https://checkmate-io.up.railway.app",
+                "https://checkmate.mathysfarineau.dev"
             ],
             methods: ["GET", "POST"],
             credentials: true
