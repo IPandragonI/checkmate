@@ -5,7 +5,7 @@ import {GameService} from "@/server/services/gameServices";
 import {ServerToClientEvents, ClientToServerEvents} from "@/app/types/game";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = process.env.NODE_ENV !== "production" ? "localhost" : "0.0.0.0";
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
@@ -25,7 +25,11 @@ app.prepare().then(() => {
             ],
             methods: ["GET", "POST"],
             credentials: true
-        }
+        },
+        transports: ['websocket', 'polling'],
+        allowEIO3: true,
+        pingTimeout: 60000,
+        pingInterval: 25000
     });
 
     io.on("connection", (socket) => {

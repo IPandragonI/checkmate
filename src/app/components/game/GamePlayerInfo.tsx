@@ -61,7 +61,6 @@ const GamePlayerInfo = ({
                             whiteTimeLeft,
                             blackTimeLeft,
                         }: GamePlayerInfoProps) => {
-    console.log(playerPlaying)
 
     const displayedTimeMs = isWhite ? whiteTimeLeft : blackTimeLeft;
     const formatTime = (ms?: number | null) => {
