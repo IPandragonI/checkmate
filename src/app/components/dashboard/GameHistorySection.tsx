@@ -15,7 +15,8 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
     return (
         <div className="bg-base-200 rounded-xl shadow p-6 h-full col-span-4 xl:col-span-3 row-span-2 max-h-[32rem]">
             <h2 className="text-lg font-bold mb-4">Historique des parties</h2>
-            <table className="min-w-full text-sm table text-center bg-base-100 overflow-x-auto">
+            <div className="overflow-auto max-h-[26rem]">
+                <table className="text-sm table text-center bg-base-100 min-w-full">
                 <thead>
                 <tr>
                     <th>Mode</th>
@@ -82,6 +83,7 @@ function GameHistorySection({gameHistory, user}: { gameHistory?: any[], user?: a
                 })}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 }

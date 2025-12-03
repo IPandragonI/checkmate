@@ -108,7 +108,7 @@ app.prepare().then(() => {
             }
         });
 
-        socket.on("move", async ({gameId, move, userId}) => {
+        socket.on("move", async ({gameId, move, userId, timeLeft}) => {
             try {
                 const gameState = await GameService.getGameState(gameId);
                 if (!gameState) {
@@ -132,6 +132,7 @@ app.prepare().then(() => {
                     capturedPiece: validation.capturedPiece,
                 };
                 await GameService.saveMove(gameId, completeMove);
+                await GameService.updateTimeLeft(gameId, userId, timeLeft);
                 socket.to(gameId).emit("move", completeMove);
                 const gameOverCheck = GameService.checkGameOver(validation.newFen!);
 

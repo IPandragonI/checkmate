@@ -4,8 +4,8 @@ import {useEffect} from "react";
 import {useSearchParams} from "next/navigation";
 import Swal from "sweetalert2";
 import {useSession} from "@/lib/auth-client";
-import Dashboard from "@/app/components/home/Dashboard";
-import DisconnectedHome from "@/app/components/home/DisconnectedHome";
+import Dashboard from "@/app/home/Dashboard";
+import DisconnectedHome from "@/app/home/DisconnectedHome";
 import FullScreenLoader from "@/app/utils/FullScreenLoader";
 
 export default function HomePage() {

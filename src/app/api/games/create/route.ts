@@ -90,6 +90,10 @@ export async function POST(req: NextRequest) {
                     data: {
                         playerWhiteId,
                         playerBlackId,
+                        timeLimit: timeLimitInMs,
+                        timeMode: timeMode?.toUpperCase() || "RAPID",
+                        whiteTimeLeft: timeLimitInMs,
+                        blackTimeLeft: timeLimitInMs,
                         status: "IN_PROGRESS",
                     },
                 });
@@ -99,6 +103,8 @@ export async function POST(req: NextRequest) {
                     status: "WAITING",
                     timeLimit: timeLimitInMs,
                     timeMode: timeMode?.toUpperCase() || "RAPID",
+                    whiteTimeLeft: timeLimitInMs,
+                    blackTimeLeft: timeLimitInMs,
                     playerWhiteId: playerWhiteId ?? null,
                     playerBlackId: playerBlackId ?? null,
                 };

@@ -104,7 +104,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     join: (data: { gameId: string; userId: string }) => void;
-    move: (data: { gameId: string; move: Move, userId: string }) => void;
+    move: (data: { gameId: string; move: Move, userId: string; timeLeft: number}) => void;
     messageSend: (data: { gameId: string; chatMessage: ChatMessage }) => void;
 }
 

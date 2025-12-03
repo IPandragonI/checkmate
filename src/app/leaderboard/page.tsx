@@ -34,8 +34,7 @@ export default function LeaderboardPage() {
     return (
         <main className="p-6 space-y-4 text-base-content">
             <h1 className="text-2xl font-bold mb-10">Classement</h1>
-            <div
-                className="flex flex-col lg:flex-row w-full justify-between items-center gap-8 bg-base-200 rounded-xl shadow p-6 h-full overflow-x-auto">
+            <div className="flex flex-col lg:flex-row w-full justify-between items-center gap-8 bg-base-200 rounded-xl shadow p-6 h-full overflow-x-auto">
 
                 <section className="w-full lg:w-1/5 h-full">
                     <div className="stats stats-horizontal lg:stats-vertical shadow bg-base-100">

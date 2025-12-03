@@ -77,7 +77,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
     const isBotTurn = isBotGame && currentTurn === initialGame.bot?.id;
 
     const onGameOver = useCallback((data: { result: string; finalFen: string }) => {
-
         setGameState((prev) => ({
             ...prev,
             status: "FINISHED",
@@ -181,7 +180,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     console.warn('Failed to load FEN on onMove', e);
                 }
                 lastTickRef.current = Date.now();
-                setCanPlay(true);
+                const currentTurn = chessRef.current.turn() === "w" ? gameStateRef.current.playerWhite?.id : gameStateRef.current.playerBlack?.id;
+                if (user.id === currentTurn && gameStateRef.current.status === "IN_PROGRESS") setCanPlay(true);
 
                 if (lastMoveByMeRef.current) {
                     lastMoveByMeRef.current = false;
@@ -308,11 +308,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     gameId: gameState.id,
                     move: completeMove,
                     userId: user?.id,
+                    timeLeft: chessRef.current.turn() === "w" ? whiteTimeLeft : blackTimeLeft,
                 });
                 setCanPlay(false)
             }
         },
-        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, router, user?.id]
+        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, initialGame.bot?.id, user?.id, router, whiteTimeLeft, blackTimeLeft]
     );
 
     useEffect(() => { gameStateRef.current = gameState; }, [gameState]);

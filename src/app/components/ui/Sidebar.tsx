@@ -1,13 +1,17 @@
 import Link from "next/link";
 import {APP_TITLE} from "@/lib/constants";
-import {Crown, Menu, Swords, UsersRound, Star, BookOpen} from 'lucide-react';
+import {Crown, Menu, Swords, UsersRound, Star, BookOpen, BadgeQuestionMark} from 'lucide-react';
 
 function Sidebar({children}: { children: React.ReactNode }) {
     const menuItems = [
         {name: "Créer une partie", href: "/games/create", icon: Swords},
         {name: "Rejoindre une partie", href: "/games/join", icon: UsersRound},
         {name: "Classement", href: "/leaderboard", icon: Star},
+    ];
+
+    const bottomMenuItems = [
         {name: "Règles", href: "/rules", icon: BookOpen},
+        {name: "Aide", href: "/help", icon: BadgeQuestionMark},
     ];
 
     return (
@@ -26,15 +30,28 @@ function Sidebar({children}: { children: React.ReactNode }) {
                         </Link>
                     </li>
                     <div className="divider my-2"></div>
-
-                    {menuItems.map((item) => (
-                        <li key={item.name}>
-                            <Link href={item.href}>
-                                <item.icon className="inline-block mr-2 text-primary" size={18}/>
-                                {item.name}
-                            </Link>
-                        </li>
-                    ))}
+                    <section className="flex flex-col justify-between flex-1">
+                        <div>
+                        {menuItems.map((item) => (
+                            <li key={item.name}>
+                                <Link href={item.href}>
+                                    <item.icon className="inline-block mr-2 text-primary" size={18}/>
+                                    {item.name}
+                                </Link>
+                            </li>
+                        ))}
+                        </div>
+                        <div>
+                            {bottomMenuItems.map((item) => (
+                                <li key={item.name}>
+                                    <Link href={item.href}>
+                                        <item.icon className="inline-block mr-2 text-secondary" size={18}/>
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </div>
+                    </section>
                 </ul>
             </div>
         </aside>

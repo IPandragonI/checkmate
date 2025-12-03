@@ -290,4 +290,42 @@ export class GameService {
             },
         });
     }
+
+    /**
+     * Met à jour le temps restant pour un joueur
+     *
+     * @param gameId
+     * @param userId
+     * @param timeLeft
+     */
+    static async updateTimeLeft(
+        gameId: string,
+        userId: string,
+        timeLeft: number
+    ): Promise<void> {
+        const game = await prisma.game.findUnique({
+            where: { id: gameId },
+            select: { playerWhiteId: true, playerBlackId: true },
+        });
+        if (!game) throw new Error("Game not found");
+
+        const isWhite = userId === game.playerWhiteId;
+        const isBlack = userId === game.playerBlackId;
+
+        if (!isWhite && !isBlack) {
+            throw new Error("User is not a player in this game");
+        }
+
+        const updateData: any = {};
+        if (isWhite) {
+            updateData.whiteTimeLeft = timeLeft;
+        } else if (isBlack) {
+            updateData.blackTimeLeft = timeLeft;
+        }
+
+        await prisma.game.update({
+            where: { id: gameId },
+            data: updateData,
+        });
+    }
 }
