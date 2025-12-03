@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Chess } from "chess.js";
+import {Chess, Square} from "chess.js";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { getSocket } from "@/socket";
@@ -38,6 +38,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
 
     const moveAudioRef = useRef<HTMLAudioElement | null>(null);
     const captureAudioRef = useRef<HTMLAudioElement | null>(null);
+    const castleAudioRef = useRef<HTMLAudioElement | null>(null);
+    const promotionAudioRef = useRef<HTMLAudioElement | null>(null);
+    const checkAudioRef = useRef<HTMLAudioElement | null>(null);
+
     const lastMoveByMeRef = useRef(false);
     const timerIntervalRef = useRef<number | null>(null);
     const lastTickRef = useRef<number | null>(null);
@@ -46,17 +50,34 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
         try {
             moveAudioRef.current = new Audio('/sounds/move-self.mp3');
             captureAudioRef.current = new Audio('/sounds/capture.mp3');
+            castleAudioRef.current = new Audio('/sounds/castle.mp3');
+            promotionAudioRef.current = new Audio('/sounds/promotion.mp3');
+            checkAudioRef.current = new Audio('/sounds/check.mp3');
 
             if (moveAudioRef.current) moveAudioRef.current.volume = 0.6;
             if (captureAudioRef.current) captureAudioRef.current.volume = 0.7;
+            if (castleAudioRef.current) castleAudioRef.current.volume = 0.6;
+            if (promotionAudioRef.current) promotionAudioRef.current.volume = 0.7;
+            if (checkAudioRef.current) checkAudioRef.current.volume = 0.8;
         } catch (e) {
             console.warn('Audio init failed', e);
         }
     }, []);
 
-    const playMoveSound = (isCapture?: boolean) => {
+    const determineAudio = (move: Move): HTMLAudioElement | null => {
+        const isCheck = chessRef.current.isCheck();
+        const isCastle = Math.abs(Number(chessRef.current.get(move.to as Square)?.type === 'k' && (move.to.charCodeAt(0) - move.from.charCodeAt(0)) === 2 || (move.to.charCodeAt(0) - move.from.charCodeAt(0)) === -2));
+
+        if (isCheck) return checkAudioRef.current;
+        if (isCastle) return castleAudioRef.current;
+        if (move.promotion) return promotionAudioRef.current;
+        if (move.capturedPiece) return captureAudioRef.current;
+        return moveAudioRef.current;
+    };
+
+    const playMoveSound = (move: Move) => {
         try {
-            const audio = isCapture ? captureAudioRef.current : moveAudioRef.current;
+            const audio = determineAudio(move);
             if (!audio) return;
             audio.currentTime = 0;
             setTimeout(() => {
@@ -183,7 +204,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                 const currentTurn = chessRef.current.turn() === "w" ? gameStateRef.current.playerWhite?.id : gameStateRef.current.playerBlack?.id;
                 if (user.id === currentTurn && gameStateRef.current.status === "IN_PROGRESS") setCanPlay(true);
 
-                playMoveSound(!!move.capturedPiece);
+                playMoveSound(move);
             } catch (e) {
                 console.error("Failed to apply move:", e);
             }
@@ -285,7 +306,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     try { chessRef.current.load(move.fen); } catch {}
                     lastTickRef.current = Date.now();
 
-                    playMoveSound(!!move.capturedPiece);
+                    playMoveSound(move);
 
                     if (isBotMove) {
                         setCanPlay(true);
@@ -318,7 +339,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     console.warn('Failed to load FEN after local move', e);
                 }
 
-                playMoveSound(!!move.capturedPiece);
+                playMoveSound(move);
                 lastTickRef.current = Date.now();
 
                 socketRef.current?.emit("move", {
