@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import {useSession} from "@/lib/auth-client";
 import FullScreenLoader from "@/app/utils/FullScreenLoader";
 import Footer from "@/app/components/ui/Footer";
+import {sendVerificationEmail} from "@/lib/auth-client";
 
 export default function ProfilePage() {
     const {data: session, isPending} = useSession();
@@ -12,6 +13,8 @@ export default function ProfilePage() {
     const [loadingPref, setLoadingPref] = useState(true);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [sendingVerification, setSendingVerification] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchPreference() {
@@ -57,6 +60,23 @@ export default function ProfilePage() {
     if (isPending || loadingPref || !session?.user) return <FullScreenLoader />;
 
     const {user} = session;
+
+    async function sendVerificationEmailWithBetterAuth() {
+        setVerificationMessage(null);
+        setSendingVerification(true);
+        try {
+            await sendVerificationEmail({
+                email: user.email
+            });
+            setVerificationMessage('Email de vérification envoyé ! Vérifiez votre boîte de réception.');
+        } catch (err) {
+            const msg = err && typeof err === 'object' && 'message' in err ? String((err as any).message) : String(err);
+            setVerificationMessage(msg || 'Erreur lors de l\'envoi');
+        } finally {
+            setSendingVerification(false);
+        }
+    }
+
 
     return (
         <main className="p-6 space-y-4 text-base-content">
@@ -107,6 +127,23 @@ export default function ProfilePage() {
                         <div>
                             <h3 className="font-medium text-slate-500">Email vérifié</h3>
                             <p>{user.emailVerified ? "Oui" : "Non"}</p>
+                            {!user.emailVerified && (
+                                <div className="mt-2">
+                                    <button
+                                        className="btn btn-sm btn-outline"
+                                        onClick={sendVerificationEmailWithBetterAuth}
+                                        disabled={sendingVerification}
+                                    >
+                                        {sendingVerification ? (
+                                            <span className="loading loading-spinner loading-sm mr-2"></span>
+                                        ) : null}
+                                        {sendingVerification ? "Envoi..." : "Envoyer un email de vérification"}
+                                    </button>
+                                    {verificationMessage && (
+                                        <p className="mt-2 text-sm">{verificationMessage}</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div>
                             <h3 className="font-medium text-slate-500">Inscrit depuis</h3>
