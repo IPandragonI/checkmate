@@ -5,7 +5,8 @@ import {GameService} from "@/server/services/gameServices";
 import {ServerToClientEvents, ClientToServerEvents} from "@/app/types/game";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.NODE_ENV !== "production" ? "localhost" : process.env.NEXT_PUBLIC_BASE_URL;
+const baseURLWithoutHttp = process.env.NEXT_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '') || "localhost:3000";
+const hostname = process.env.NODE_ENV !== "production" ? "localhost" : baseURLWithoutHttp;
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const app = next({dev, hostname, port});
 const handler = app.getRequestHandler();
