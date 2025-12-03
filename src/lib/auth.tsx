@@ -20,6 +20,9 @@ export const auth = betterAuth({
     emailVerification: {
         sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }) => {
+            if (process.env.NODE_ENV === 'production') {
+                url = url.replace(':3000', '');
+            }
             Promise.race([
                 sendEmail({
                     to: user.email,
