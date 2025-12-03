@@ -183,11 +183,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                 const currentTurn = chessRef.current.turn() === "w" ? gameStateRef.current.playerWhite?.id : gameStateRef.current.playerBlack?.id;
                 if (user.id === currentTurn && gameStateRef.current.status === "IN_PROGRESS") setCanPlay(true);
 
-                if (lastMoveByMeRef.current) {
-                    lastMoveByMeRef.current = false;
-                } else {
-                    playMoveSound(!!move.capturedPiece);
-                }
+                playMoveSound(!!move.capturedPiece);
             } catch (e) {
                 console.error("Failed to apply move:", e);
             }
@@ -302,15 +298,37 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                 }
             } else {
                 lastMoveByMeRef.current = true;
+                setGameState((prev) => ({
+                    ...prev,
+                    currentFen: move.fen,
+                    moves: [...prev.moves, completeMove],
+                    capturedPieces: {
+                        white: move.capturedPiece && chessRef.current.turn() === "w"
+                            ? [...prev.capturedPieces.white, move.capturedPiece]
+                            : prev.capturedPieces.white,
+                        black: move.capturedPiece && chessRef.current.turn() === "b"
+                            ? [...prev.capturedPieces.black, move.capturedPiece]
+                            : prev.capturedPieces.black,
+                    },
+                }));
+
+                try {
+                    chessRef.current.load(move.fen);
+                } catch (e) {
+                    console.warn('Failed to load FEN after local move', e);
+                }
+
                 playMoveSound(!!move.capturedPiece);
                 lastTickRef.current = Date.now();
+
                 socketRef.current?.emit("move", {
                     gameId: gameState.id,
                     move: completeMove,
                     userId: user?.id,
                     timeLeft: chessRef.current.turn() === "w" ? whiteTimeLeft : blackTimeLeft,
                 });
-                setCanPlay(false)
+
+                setCanPlay(false);
             }
         },
         [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, initialGame.bot?.id, user?.id, router, whiteTimeLeft, blackTimeLeft]
