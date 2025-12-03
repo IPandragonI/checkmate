@@ -208,7 +208,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <h3 className="font-medium text-slate-500">Inscrit depuis</h3>
-                            <p>{new Date(user.createdAt).toLocaleDateString()}</p>
+                            <p>{new Date(user.createdAt).toLocaleDateString("fr")}</p>
                         </div>
                     </div>
 

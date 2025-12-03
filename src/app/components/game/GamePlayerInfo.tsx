@@ -76,7 +76,8 @@ const GamePlayerInfo = ({
         <div className={`${isGameStarted ? "" : "hidden"} w-full flex items-center justify-center`}>
             <div className="w-full p-2 flex items-center gap-4">
                 {player?.image ? (
-                    <Image src={player.image} alt={player.username} className="w-8 h-8 rounded-full object-cover"/>
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={player.image} alt={player.username} className="w-8 h-8 rounded-full object-cover"/>
                 ) : (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-xl text-gray-400">?</span>
