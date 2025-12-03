@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react";
 import {useSession} from "@/lib/auth-client";
 import FullScreenLoader from "@/app/utils/FullScreenLoader";
+import Footer from "@/app/components/ui/Footer";
 
 export default function ProfilePage() {
     const {data: session, isPending} = useSession();
@@ -59,7 +60,7 @@ export default function ProfilePage() {
 
     return (
         <main className="p-6 space-y-4 text-base-content">
-            <h1 className="text-2xl font-bold">Profil</h1>
+            <h1 className="text-2xl font-bold mb-10">Profil</h1>
             {error && <p className="text-red-500">{error}</p>}
             <div className="flex flex-col lg:flex-row items-stretch gap-6">
 
@@ -150,6 +151,7 @@ export default function ProfilePage() {
                     )}
                 </div>
             </div>
+            <Footer />
         </main>
     );
 }
