@@ -34,16 +34,17 @@ export default function Topbar() {
                 </button>
                 {user && (
                     <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn avatar rounded-full gap-4">
-                            {user?.image ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={user?.image} alt="User Avatar" className="rounded-full w-8 h-8 object-cover"/>
-                            ) : (
-                                <span className="text-lg">
+                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                            <div className="w-10 rounded-full">
+                                {user?.image ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={user?.image} alt="User Avatar" className="rounded-full object-cover w-10 h-10"/>
+                                ) : (
+                                    <span className="text-lg">
                                 {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
                             </span>
-                            )}
-                            <span className="font-semibold text-base-content">{user?.username}</span>
+                                )}
+                            </div>
                         </div>
                         <ul tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">

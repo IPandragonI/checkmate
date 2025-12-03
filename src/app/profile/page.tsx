@@ -16,6 +16,11 @@ export default function ProfilePage() {
     const [sendingVerification, setSendingVerification] = useState(false);
     const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [userName, setUserName] = useState<string>("");
+    const [userUsername, setUserUsername] = useState<string>("");
+    const [userImage, setUserImage] = useState<string>("");
+
     useEffect(() => {
         async function fetchPreference() {
             setLoadingPref(true);
@@ -35,6 +40,14 @@ export default function ProfilePage() {
         }
         fetchPreference();
     }, []);
+
+    useEffect(() => {
+        if (session?.user) {
+            setUserName(session.user.name || "");
+            setUserUsername(session.user.username || "");
+            setUserImage(session.user.image || "");
+        }
+    }, [session]);
 
     async function savePreferences() {
         setSaving(true);
@@ -77,6 +90,29 @@ export default function ProfilePage() {
         }
     }
 
+    async function saveProfileEdits() {
+        setSaving(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/user', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: userName, username: userUsername, image: userImage })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.error || 'Erreur lors de la mise à jour du profil');
+            }
+            setIsEditing(false);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2500);
+
+        } catch (e: any) {
+            setError(e.message || String(e));
+        } finally {
+            setSaving(false);
+        }
+    }
 
     return (
         <main className="p-6 space-y-4 text-base-content">
@@ -85,40 +121,59 @@ export default function ProfilePage() {
             <div className="flex flex-col lg:flex-row items-stretch gap-6">
 
                 <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-base-200 shadow w-full lg:w-1/3">
-                    <p className="text-lg font-semibold">{user.name}</p>
+                    <p className="text-lg font-semibold">{userName}</p>
                     <div className="avatar placeholder">
-                        <div className="bg-neutral-focus max-h-32 flex items-center justify-center text-3xl">
-                            {user.image ? (
+                        <div className="bg-neutral-focus text-neutral-content rounded-full flex items-center justify-center text-3xl">
+                            {userImage ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={user.image} alt="User Avatar"
-                                     className="rounded-full object-cover" />
+                                <img src={userImage} alt="Avatar" className="rounded-full w-full object-cover" />
                             ) : (
                                 <span>
-                                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                                    {userName ? userName.charAt(0).toUpperCase() : "U"}
                                 </span>
                             )}
                         </div>
                     </div>
-
-                    {/* Si temps */}
-                    {/*<div>*/}
-                    {/*    <a className="btn btn-secondary btn-sm">*/}
-                    {/*        Changer d'avatar*/}
-                    {/*    </a>*/}
-                    {/*</div>*/}
                 </div>
 
 
                 <div className="flex flex-col gap-4 p-6 rounded-xl bg-base-200 shadow w-full lg:w-2/3">
-                    <h2 className="text-lg font-semibold">Bio &amp; détails</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">Bio &amp; détails</h2>
+                        <div>
+                            {!isEditing ? (
+                                <button className="btn btn-sm" onClick={() => setIsEditing(true)}>Éditer</button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button className="btn btn-sm btn-outline" onClick={() => {
+                                        setIsEditing(false);
+                                        setUserName(user.name || "");
+                                        setUserUsername(user.username || "");
+                                        setUserImage(user.image || "");
+                                    }}>Annuler</button>
+                                    <button className="btn btn-sm btn-primary" onClick={saveProfileEdits} disabled={saving}>
+                                        {saving ? (
+                                            <span className="loading loading-spinner loading-sm mr-2"></span>
+                                        ) : null}
+                                        {saving ? 'Enregistrement...' : 'Enregistrer'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div>
                             <h3 className="font-medium text-slate-500">Nom complet</h3>
-                            <p>{user.name}</p>
+                            {!isEditing ? <p>{userName}</p> : (
+                                <input className="input input-bordered w-full" value={userName} onChange={(e) => setUserName(e.target.value)} />
+                            )}
                         </div>
                         <div>
                             <h3 className="font-medium text-slate-500">Nom d'utilisateur</h3>
-                            <p>{user.username}</p>
+                            {!isEditing ? <p>{userUsername}</p> : (
+                                <input className="input input-bordered w-full" value={userUsername} onChange={(e) => setUserUsername(e.target.value)} />
+                            )}
                         </div>
                         <div>
                             <h3 className="font-medium text-slate-500">Email</h3>
@@ -143,6 +198,12 @@ export default function ProfilePage() {
                                         <p className="mt-2 text-sm">{verificationMessage}</p>
                                     )}
                                 </div>
+                            )}
+                        </div>
+                        <div>
+                            <h3 className="font-medium text-slate-500">URL de l'image de profil</h3>
+                            {!isEditing ? <p className="truncate">{userImage || "Aucune"}</p> : (
+                                <input className="input input-bordered w-full" value={userImage} onChange={(e) => setUserImage(e.target.value)} />
                             )}
                         </div>
                         <div>

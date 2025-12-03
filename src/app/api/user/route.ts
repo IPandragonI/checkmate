@@ -40,3 +40,41 @@ export async function GET() {
 
     return NextResponse.json({user: completeUser, gameHistory, ratingHistory});
 }
+export async function PATCH(req: NextRequest) {
+    const user = await getUserFromRequest();
+    if (!user?.id) {
+        return NextResponse.json({error: "Non authentifié"}, {status: 401});
+    }
+
+    let body: any;
+    try {
+        body = await req.json();
+    } catch (err) {
+        return NextResponse.json({error: 'Payload invalide'}, {status: 400});
+    }
+
+    const {name, username, image} = body || {};
+
+    if (username) {
+        const existing = await prisma.user.findUnique({ where: { username } });
+        if (existing && existing.id !== user.id) {
+            return NextResponse.json({ error: "Nom d'utilisateur déjà pris" }, { status: 409 });
+        }
+    }
+
+    try {
+        const updated = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                ...(typeof name === 'string' ? { name } : {}),
+                ...(typeof username === 'string' ? { username } : {}),
+                ...(typeof image === 'string' ? { image } : {}),
+            }
+        });
+
+        return NextResponse.json({ user: updated });
+    } catch (err: any) {
+        console.error('Erreur mise à jour utilisateur:', err);
+        return NextResponse.json({ error: 'Erreur lors de la mise à jour du profil' }, { status: 500 });
+    }
+}
