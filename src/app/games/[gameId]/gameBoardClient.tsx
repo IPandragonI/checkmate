@@ -12,6 +12,7 @@ import GameLayout from "@/app/components/game/GameLayout";
 import { GameState, Move, Player } from "@/app/types/game";
 import Swal from "sweetalert2";
 import {getGameResult, handleGameOver} from "@/app/games/utils/gameUtils";
+import { createAudioController, AudioController } from '@/lib/audio';
 
 interface GameBoardProps {
     initialGame: GameState;
@@ -36,64 +37,35 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
     const matchAnnouncementShownRef = useRef(false);
     const gameStateRef = useRef<GameState>(initialGame);
 
-    const startAudioRef = useRef<HTMLAudioElement | null>(null);
-    const endAudioRef = useRef<HTMLAudioElement | null>(null);
-    const moveAudioRef = useRef<HTMLAudioElement | null>(null);
-    const captureAudioRef = useRef<HTMLAudioElement | null>(null);
-    const castleAudioRef = useRef<HTMLAudioElement | null>(null);
-    const promotionAudioRef = useRef<HTMLAudioElement | null>(null);
-    const checkAudioRef = useRef<HTMLAudioElement | null>(null);
+    const audioCtrlRef = useRef<AudioController | null>(null);
 
     const lastMoveByMeRef = useRef(false);
     const timerIntervalRef = useRef<number | null>(null);
     const lastTickRef = useRef<number | null>(null);
 
     useEffect(() => {
+        // create audio controller on mount
         try {
-            startAudioRef.current = new Audio('/sounds/game-start.mp3');
-            endAudioRef.current = new Audio('/sounds/game-end.mp3');
-            moveAudioRef.current = new Audio('/sounds/move-self.mp3');
-            captureAudioRef.current = new Audio('/sounds/capture.mp3');
-            castleAudioRef.current = new Audio('/sounds/castle.mp3');
-            promotionAudioRef.current = new Audio('/sounds/promotion.mp3');
-            checkAudioRef.current = new Audio('/sounds/check.mp3');
-
-            if (startAudioRef.current) startAudioRef.current.volume = 0.5;
-            if (endAudioRef.current) endAudioRef.current.volume = 0.5;
-            if (moveAudioRef.current) moveAudioRef.current.volume = 0.6;
-            if (captureAudioRef.current) captureAudioRef.current.volume = 0.7;
-            if (castleAudioRef.current) castleAudioRef.current.volume = 0.6;
-            if (promotionAudioRef.current) promotionAudioRef.current.volume = 0.7;
-            if (checkAudioRef.current) checkAudioRef.current.volume = 0.8;
+            audioCtrlRef.current = createAudioController();
         } catch (e) {
             console.warn('Audio init failed', e);
         }
-    }, []);
 
-    const determineAudio = (move: Move): HTMLAudioElement | null => {
-        const isCheck = chessRef.current.isCheck();
-        const isCastle = chessRef.current.get(move.to as Square)?.type === 'k' && (move.to === 'g1' || move.to === 'c1' || move.to === 'g8' || move.to === 'c8');
-        if (isCheck) return checkAudioRef.current;
-        if (isCastle) return castleAudioRef.current;
-        if (move.capturedPiece) return captureAudioRef.current;
-        return moveAudioRef.current;
-    };
-    
-    const determineStartOrEndAudio = (startOrEnd: string): HTMLAudioElement | null => {
-        return startOrEnd === "START" ? startAudioRef.current : endAudioRef.current;
-    }
+        return () => {
+            try {
+                audioCtrlRef.current?.dispose();
+                audioCtrlRef.current = null;
+            } catch (e) {}
+        };
+    }, []);
 
     const playSound = useCallback((move: Move, startOrEnd?: string) => {
         try {
-            const audio = startOrEnd ? determineStartOrEndAudio(startOrEnd) : determineAudio(move);
-            if (!audio) return;
-            audio.currentTime = 0;
-            setTimeout(() => {
-                audio.play().catch((e) => {
-                    console.warn('Audio play failed', e);
-                });
-            }, 100);
+            const isCheck = chessRef.current.isCheck();
+            const isCastle = chessRef.current.get(move.to as Square)?.type === 'k' && (move.to === 'g1' || move.to === 'c1' || move.to === 'g8' || move.to === 'c8');
+            audioCtrlRef.current?.playSound(move, { isCheck, isCastle, startOrEnd: startOrEnd as any });
         } catch (e) {
+            // ignore
         }
     }, []);
 

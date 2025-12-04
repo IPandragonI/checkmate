@@ -17,9 +17,14 @@ interface ChessboardWrapperProps {
     isStatic?: boolean;
     isBotTurn?: boolean;
     resetKey?: number;
+    highlightedSquares?: Array<Record<string, React.CSSProperties>>;
+    highlightedMoves?: Array<Move>;
 }
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const MOVE_FROM_COLOR = 'rgb(34,111,227, 0.56)';
+export const HIGHLIGHT_SQUARE_COLOR = 'rgba(62, 181, 93, 0.56)';
+const HIGHLIGHT_ARROW_COLOR = 'rgba(246, 206, 84, 0.8)';
 
 const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  boardOrientation = "white",
@@ -31,13 +36,17 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  isStatic = true,
                                                                  isBotTurn = false,
                                                                  resetKey = 0,
+                                                                 highlightedSquares = [],
+                                                                 highlightedMoves = []
                                                              }) => {
     const chessGameRef = useRef(new Chess());
     const chessGame = chessGameRef.current;
 
     const [chessPosition, setChessPosition] = useState(chessGame.fen());
     const [moveFrom, setMoveFrom] = useState('');
-    const [optionSquares, setOptionSquares] = useState({});
+    const [moveOptionSquares, setMoveOptionSquares] = useState<Record<string, React.CSSProperties>>({});
+    const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
+    const [arrows, setArrows] = useState<Array<{startSquare: Square, endSquare: Square, color: string}>>([]);
     const [firstMoveMade, setFirstMoveMade] = useState(false);
 
     const boardStyles = getBoardStyles();
@@ -47,12 +56,14 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         try {
             chessGame.load(currentFen);
             setChessPosition(currentFen);
+            setMoveOptionSquares({});
         } catch (e) {
             console.error('Failed to load FEN in ChessboardWrapper', e);
         }
 
     }, [currentFen, resetKey]);
 
+     
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const GLOBAL_FLAG = '__checkmate_bot_first_move_done';
@@ -65,6 +76,36 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         }
     }, [botElo, isOnline, canPlay, isBotTurn, firstMoveMade, chessGame]);
 
+    useEffect(() => {
+        const merged: Record<string, React.CSSProperties> = {};
+        for (const hs of highlightedSquares) {
+            for (const key in hs) merged[key] = hs[key];
+        }
+        for (const key in moveOptionSquares) merged[key] = moveOptionSquares[key];
+        if (moveFrom) merged[moveFrom] = { background: MOVE_FROM_COLOR };
+
+        setOptionSquares(merged);
+    }, [highlightedSquares, moveOptionSquares, moveFrom]);
+
+    useEffect(() => {
+         if (highlightedMoves.length === 0) {
+             setArrows([]);
+             return;
+         }
+
+         const newArrows: Array<{startSquare: Square, endSquare: Square, color: string}> = [];
+
+         for (const move of highlightedMoves) {
+             newArrows.push({
+                 startSquare: move.from as Square,
+                 endSquare: move.to as Square,
+                 color: HIGHLIGHT_ARROW_COLOR
+             });
+         }
+
+         setArrows(newArrows);
+     }, [highlightedMoves, moveFrom]);
+
     function makeBotMove() {
         if (chessGame.isGameOver()) {
             return;
@@ -76,7 +117,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         const move = chessGame.move(botMove);
 
         const fenAfter = move ? getFenAfterMove(move.from, move.to, fenBefore) : chessGame.fen();
-        onMove && onMove({
+        if (onMove) onMove({
             from: move?.from,
             to: move?.to,
             promotion: 'q',
@@ -90,163 +131,166 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         if (!from || !to) return null;
         const tempChess = new Chess(baseFen ?? chessGame.fen());
         try {
-            const result = tempChess.move({ from, to, promotion: 'q' });
+            const result = tempChess.move({from, to, promotion: 'q'});
             if (!result) return null;
             return tempChess.fen();
         } catch {
             return null;
         }
     }
+    
+     function getMoveOptions(square: Square) {
+         const moves = chessGame.moves({
+             square,
+             verbose: true
+         });
 
-    function getMoveOptions(square: Square) {
-        const moves = chessGame.moves({
-            square,
-            verbose: true
-        });
+         if (moves.length === 0) {
+             setMoveOptionSquares({});
+             return false;
+         }
 
-        if (moves.length === 0) {
-            setOptionSquares({});
-            return false;
-        }
+         const newSquares: Record<string, React.CSSProperties> = {};
 
-        const newSquares: Record<string, React.CSSProperties> = {};
+         for (const move of moves) {
+             newSquares[move.to] = {
+                 background: chessGame.get(move.to) && chessGame.get(move.to)?.color !== chessGame.get(square)?.color ? 'radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)'
+                     : 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+                 borderRadius: '50%'
+             };
+         }
 
-        for (const move of moves) {
-            newSquares[move.to] = {
-                background: chessGame.get(move.to) && chessGame.get(move.to)?.color !== chessGame.get(square)?.color ? 'radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)'
-                    : 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
-                borderRadius: '50%'
-            };
-        }
+         newSquares[square] = {
+             background: MOVE_FROM_COLOR
+         };
 
-        newSquares[square] = {
-            background: 'rgba(255, 255, 0, 0.4)'
-        };
 
-        setOptionSquares(newSquares);
-
-        return true;
-    }
-
-    function onSquareClick({
-                               square,
-                               piece
-                           }: SquareHandlerArgs) {
-        if (isStatic) return;
-
-        if (!canPlay) {
-            setMoveFrom('');
-            setOptionSquares({});
-            return;
-        }
-
-        if (!moveFrom && piece) {
-            const hasMoveOptions = getMoveOptions(square as Square);
-
-            if (hasMoveOptions) {
-                setMoveFrom(square);
+        for (const hs of highlightedSquares) {
+            for (const key in hs) {
+                newSquares[key] = hs[key];
             }
-
-            return;
         }
+        setMoveOptionSquares(newSquares);
 
-        const moves = chessGame.moves({
-            square: moveFrom as Square,
-            verbose: true
-        });
-        const foundMove = moves.find(m => m.from === moveFrom && m.to === square);
+         return true;
+     }
 
-        if (!foundMove) {
-            const hasMoveOptions = getMoveOptions(square as Square);
+     function onSquareClick({
+                                square,
+                                piece
+                            }: SquareHandlerArgs) {
+         if (isStatic) return;
 
-            setMoveFrom(hasMoveOptions ? square : '');
-            return;
-        }
+         if (!canPlay) {
+             setMoveFrom('');
+             return;
+         }
 
-        let move;
-        try {
-            const fenBefore = chessGame.fen();
-            move = chessGame.move({
-                from: moveFrom,
-                to: square,
-                promotion: 'q'
-            });
-            onMove && onMove({
-                from: moveFrom,
-                to: square,
-                promotion: 'q',
-                fen: getFenAfterMove(moveFrom as Square, square as Square, fenBefore) as string,
-                capturedPiece: move?.captured
-            }, false);
-        } catch {
-            const hasMoveOptions = getMoveOptions(square as Square);
+         if (!moveFrom && piece) {
+             const hasMoveOptions = getMoveOptions(square as Square);
 
-            if (hasMoveOptions) {
-                setMoveFrom(square);
-            }
+             if (hasMoveOptions) {
+                 setMoveFrom(square);
+             }
 
-            return;
-        }
+             return;
+         }
 
-        setChessPosition(chessGame.fen());
+         const moves = chessGame.moves({
+             square: moveFrom as Square,
+             verbose: true
+         });
+         const foundMove = moves.find(m => m.from === moveFrom && m.to === square);
 
-        const botMoveDelay = Math.random() * (3000 - 800) + 800;
-        if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
+         if (!foundMove) {
+             const hasMoveOptions = getMoveOptions(square as Square);
 
-        setMoveFrom('');
-        setOptionSquares({});
-    }
+             setMoveFrom(hasMoveOptions ? square : '');
+             return;
+         }
 
-    function onPieceDrop({
-                             sourceSquare,
-                             targetSquare
-                         }: PieceDropHandlerArgs) {
-        if (!targetSquare || isStatic || !canPlay) {
-            return false;
-        }
+         let move;
+         try {
+             const fenBefore = chessGame.fen();
+             move = chessGame.move({
+                 from: moveFrom,
+                 to: square,
+                 promotion: 'q'
+             });
+             if (onMove) onMove({
+                 from: moveFrom,
+                 to: square,
+                 promotion: 'q',
+                 fen: getFenAfterMove(moveFrom as Square, square as Square, fenBefore) as string,
+                 capturedPiece: move?.captured
+             }, false);
+         } catch {
+             const hasMoveOptions = getMoveOptions(square as Square);
 
-        try {
-            const fenBefore = chessGame.fen();
-            const move = chessGame.move({
-                from: sourceSquare,
-                to: targetSquare,
-                promotion: 'q'
-            });
+             if (hasMoveOptions) {
+                 setMoveFrom(square);
+             }
 
-            onMove && onMove({
-                from: sourceSquare,
-                to: targetSquare,
-                promotion: 'q',
-                fen: getFenAfterMove(move?.from as Square, move?.to as Square, fenBefore) as string,
-                capturedPiece: move?.captured
-            }, false);
-            setChessPosition(chessGame.fen());
+             return;
+         }
 
-            setMoveFrom('');
-            setOptionSquares({});
+         setChessPosition(chessGame.fen());
+         setMoveFrom('');
+         setMoveOptionSquares({});
+     }
 
-            const botMoveDelay = Math.random() * (3000 - 800) + 800;
-            if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
+     function onPieceDrop({
+                              sourceSquare,
+                              targetSquare
+                          }: PieceDropHandlerArgs) {
+         if (!targetSquare || isStatic || !canPlay) {
+             return false;
+         }
 
-            return true;
-        } catch {
-            return false;
-        }
-    }
+         try {
+             const fenBefore = chessGame.fen();
+             const move = chessGame.move({
+                 from: sourceSquare,
+                 to: targetSquare,
+                 promotion: 'q'
+             });
+
+             if (onMove) onMove({
+                 from: sourceSquare,
+                 to: targetSquare,
+                 promotion: 'q',
+                 fen: getFenAfterMove(move?.from as Square, move?.to as Square, fenBefore) as string,
+                 capturedPiece: move?.captured
+             }, false);
+             setChessPosition(chessGame.fen());
+
+             setMoveFrom('');
+             // move completed via drag: clear internal bullets
+             setMoveOptionSquares({});
+
+             const botMoveDelay = Math.random() * (3000 - 800) + 800;
+             if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
+
+             return true;
+         } catch {
+             return false;
+         }
+     }
 
     const chessboardOptions = {
         ...boardStyles,
         position: chessPosition,
         squareStyles: optionSquares,
+        arrows: arrows,
         id: 'click-or-drag-to-move'
     };
 
     if (!isStatic) {
         Object.assign(chessboardOptions, {
-            onSquareClick: (args: SquareHandlerArgs) => onSquareClick(args),
-            onPieceDrop: (args: PieceDropHandlerArgs) => onPieceDrop(args),
-            boardOrientation: boardOrientation,
-            arePiecesDraggable: canPlay && (!isOnline || isBotTurn),
+            onSquareClick: onSquareClick,
+            onPieceDrop: onPieceDrop,
+             boardOrientation: boardOrientation,
+             arePiecesDraggable: canPlay && (!isOnline || isBotTurn),
         });
     }
 

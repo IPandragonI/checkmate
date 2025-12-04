@@ -1,5 +1,5 @@
 import Loader from "@/app/utils/Loader";
-import {RotateCcw} from "lucide-react"
+import {RotateCcw, Lightbulb} from "lucide-react"
 import {Svg} from "@/app/utils/Svg";
 import ColorCard from "@/app/components/field/ColorCard";
 import {PUZZLE_DIFFICULTY_LEVELS} from "@/app/types/game";
@@ -11,6 +11,7 @@ interface PuzzleInfosProps {
     puzzleNumber?: number;
     difficulty?: number;
     onReset?: () => void;
+    onHelp?: () => void;
 }
 
 const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
@@ -20,6 +21,8 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                                                      puzzleNumber = 0,
                                                      difficulty = 0,
                                                      onReset = () => {
+                                                     },
+                                                     onHelp = () => {
                                                      },
                                                  }) => {
     return (
@@ -55,13 +58,24 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                         </div>
                     )}
             </div>
-            <button
-                onClick={onReset}
-                className={`btn btn-sm btn-outline btn-primary flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
-            >
-                Réinitialiser
-                <RotateCcw size={16}/>
-            </button>
+            {message && (
+                <button
+                    onClick={onReset}
+                    className={`btn btn-outline btn-error flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
+                >
+                    <RotateCcw size={16}/>
+                    Réinitialiser
+                </button>
+            )}
+            {!message && (
+                <button
+                    onClick={onHelp}
+                    className={`btn btn-outline btn-secondary flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
+                >
+                    <Lightbulb size={16}/>
+                    Indication
+                </button>
+            )}
         </section>
     );
 }
