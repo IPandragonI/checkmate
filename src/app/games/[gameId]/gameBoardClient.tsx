@@ -72,8 +72,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
 
     const determineAudio = (move: Move): HTMLAudioElement | null => {
         const isCheck = chessRef.current.isCheck();
-        const isCastle = Math.abs(Number(chessRef.current.get(move.to as Square)?.type === 'k' && (move.to.charCodeAt(0) - move.from.charCodeAt(0)) === 2 || (move.to.charCodeAt(0) - move.from.charCodeAt(0)) === -2));
-
+        const isCastle = chessRef.current.get(move.to as Square)?.type === 'k' && (move.to === 'g1' || move.to === 'c1' || move.to === 'g8' || move.to === 'c8');
         if (isCheck) return checkAudioRef.current;
         if (isCastle) return castleAudioRef.current;
         if (move.capturedPiece) return captureAudioRef.current;
