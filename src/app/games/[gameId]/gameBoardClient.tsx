@@ -36,6 +36,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
     const matchAnnouncementShownRef = useRef(false);
     const gameStateRef = useRef<GameState>(initialGame);
 
+    const startAudioRef = useRef<HTMLAudioElement | null>(null);
+    const endAudioRef = useRef<HTMLAudioElement | null>(null);
     const moveAudioRef = useRef<HTMLAudioElement | null>(null);
     const captureAudioRef = useRef<HTMLAudioElement | null>(null);
     const castleAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -48,12 +50,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
 
     useEffect(() => {
         try {
+            startAudioRef.current = new Audio('/sounds/game-start.mp3');
+            endAudioRef.current = new Audio('/sounds/game-end.mp3');
             moveAudioRef.current = new Audio('/sounds/move-self.mp3');
             captureAudioRef.current = new Audio('/sounds/capture.mp3');
             castleAudioRef.current = new Audio('/sounds/castle.mp3');
             promotionAudioRef.current = new Audio('/sounds/promotion.mp3');
             checkAudioRef.current = new Audio('/sounds/check.mp3');
 
+            if (startAudioRef.current) startAudioRef.current.volume = 0.5;
+            if (endAudioRef.current) endAudioRef.current.volume = 0.5;
             if (moveAudioRef.current) moveAudioRef.current.volume = 0.6;
             if (captureAudioRef.current) captureAudioRef.current.volume = 0.7;
             if (castleAudioRef.current) castleAudioRef.current.volume = 0.6;
@@ -70,14 +76,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
 
         if (isCheck) return checkAudioRef.current;
         if (isCastle) return castleAudioRef.current;
-        if (move.promotion) return promotionAudioRef.current;
         if (move.capturedPiece) return captureAudioRef.current;
         return moveAudioRef.current;
     };
+    
+    const determineStartOrEndAudio = (startOrEnd: string): HTMLAudioElement | null => {
+        return startOrEnd === "START" ? startAudioRef.current : endAudioRef.current;
+    }
 
-    const playMoveSound = (move: Move) => {
+    const playSound = useCallback((move: Move, startOrEnd?: string) => {
         try {
-            const audio = determineAudio(move);
+            const audio = startOrEnd ? determineStartOrEndAudio(startOrEnd) : determineAudio(move);
             if (!audio) return;
             audio.currentTime = 0;
             setTimeout(() => {
@@ -87,7 +96,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
             }, 100);
         } catch (e) {
         }
-    };
+    }, []);
 
     const currentTurn = chessRef.current.turn() === "w" ? (gameState.playerWhite?.id || initialGame.bot?.id) : (gameState.playerBlack?.id || initialGame.bot?.id);
     const [canPlay, setCanPlay] = useState(user?.id === currentTurn && gameState.status === "IN_PROGRESS");
@@ -111,18 +120,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
             console.error("Failed to load final FEN:", e);
         }
 
+        playSound({} as Move, "END");
         handleGameOver({
             chess: chessRef.current,
             playerWhite: gameState.playerWhite,
             playerBlack: gameState.playerBlack,
             router,
         });
-    }, [gameState.playerBlack, gameState.playerWhite, router]);
+    }, [gameState.playerBlack, gameState.playerWhite, playSound, router]);
 
     useEffect(() => {
         if (!user?.id) return;
 
         if (gameState.status === "FINISHED") {
+            playSound({} as Move, "END");
             handleGameOver({
                 chess: chessRef.current,
                 playerWhite: gameState.playerWhite,
@@ -132,7 +143,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
             return;
         }
 
-        if (isBotGame) return;
+        if (isBotGame) {
+            if (gameState.status === "IN_PROGRESS" && !matchAnnouncementShownRef.current) {
+                setShowMatchAnnouncement(true);
+                setMatchAnnounced(true);
+                matchAnnouncementShownRef.current = true;
+                playSound({} as Move, "START");
+            }
+            return;
+        }
 
         const socket = getSocket(user.id);
         socketRef.current = socket;
@@ -204,7 +223,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                 const currentTurn = chessRef.current.turn() === "w" ? gameStateRef.current.playerWhite?.id : gameStateRef.current.playerBlack?.id;
                 if (user.id === currentTurn && gameStateRef.current.status === "IN_PROGRESS") setCanPlay(true);
 
-                playMoveSound(move);
+                playSound(move);
             } catch (e) {
                 console.error("Failed to apply move:", e);
             }
@@ -228,18 +247,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
             socket.off("gameOver", onGameOver);
             socket.off("error", onError);
         };
-    }, [user?.id, isBotGame, gameState.id, onGameOver, matchAnnounced, gameState.playerWhite, gameState.playerBlack, gameState.status, router]);
+    }, [user?.id, isBotGame, gameState.id, onGameOver, matchAnnounced, gameState.playerWhite, gameState.playerBlack, gameState.status, router, playSound]);
 
     useEffect(() => {
         if (!showMatchAnnouncement) return;
 
         const playerWhite = gameState.playerWhite?.username || "Bot";
         const playerBlack = gameState.playerBlack?.username || "Bot";
-        const botName = gameState.bot?.label || gameState.bot?.username;
+        const botName = gameState.bot?.username;
 
         const whiteName = gameState.playerWhite ? playerWhite : botName;
         const blackName = gameState.playerBlack ? playerBlack : botName;
 
+        playSound({} as Move, "START");
         Swal.fire({
             title: "Match starts!",
             html: `<b>${whiteName}</b> (White) vs <b>${blackName}</b> (Black)`,
@@ -249,7 +269,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
         }).then(() => {
             setShowMatchAnnouncement(false);
         });
-    }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot]);
+    }, [showMatchAnnouncement, gameState.playerWhite, gameState.playerBlack, gameState.bot, playSound]);
 
     const handleMove = useCallback(
         async (move: Move, isBotMove: boolean) => {
@@ -306,7 +326,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     try { chessRef.current.load(move.fen); } catch {}
                     lastTickRef.current = Date.now();
 
-                    playMoveSound(move);
+                    playSound(move);
 
                     if (isBotMove) {
                         setCanPlay(true);
@@ -339,7 +359,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                     console.warn('Failed to load FEN after local move', e);
                 }
 
-                playMoveSound(move);
+                playSound(move);
                 lastTickRef.current = Date.now();
 
                 socketRef.current?.emit("move", {
@@ -352,7 +372,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ initialGame }) => {
                 setCanPlay(false);
             }
         },
-        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, initialGame.bot?.id, user?.id, router, whiteTimeLeft, blackTimeLeft]
+        [gameState.status, gameState.moves.length, gameState.id, gameState.playerWhite, gameState.playerBlack, gameState.currentFen, isOnlineGame, canPlay, isBotGame, initialGame.bot?.id, user?.id, playSound, router, whiteTimeLeft, blackTimeLeft]
     );
 
     useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
