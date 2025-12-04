@@ -45,8 +45,11 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     const [chessPosition, setChessPosition] = useState(chessGame.fen());
     const [moveFrom, setMoveFrom] = useState('');
     const [moveOptionSquares, setMoveOptionSquares] = useState<Record<string, React.CSSProperties>>({});
+    const lastMergedSquaresJsonRef = useRef<string>('');
+    const prevMergedRef = useRef<Record<string, React.CSSProperties> | null>(null);
     const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
     const [arrows, setArrows] = useState<Array<{startSquare: Square, endSquare: Square, color: string}>>([]);
+    const lastArrowsJsonRef = useRef<string>('');
     const [firstMoveMade, setFirstMoveMade] = useState(false);
 
     const boardStyles = getBoardStyles();
@@ -84,26 +87,71 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         for (const key in moveOptionSquares) merged[key] = moveOptionSquares[key];
         if (moveFrom) merged[moveFrom] = { background: MOVE_FROM_COLOR };
 
-        setOptionSquares(merged);
+        let shouldUpdate = false;
+        try {
+            const s = JSON.stringify(merged);
+            if (lastMergedSquaresJsonRef.current !== s) {
+                lastMergedSquaresJsonRef.current = s;
+                shouldUpdate = true;
+                prevMergedRef.current = merged;
+            }
+        } catch (e) {
+            // fallback: shallow compare with prevMergedRef (avoid reading optionSquares state directly)
+            const prev = prevMergedRef.current;
+            if (!prev) {
+                shouldUpdate = true;
+                prevMergedRef.current = merged;
+            } else {
+                const mergedKeys = Object.keys(merged);
+                const prevKeys = Object.keys(prev);
+                if (mergedKeys.length !== prevKeys.length) {
+                    shouldUpdate = true;
+                    prevMergedRef.current = merged;
+                } else {
+                    for (const k of mergedKeys) {
+                        const a = prev[k];
+                        const b = merged[k];
+                        try {
+                            if (JSON.stringify(a) !== JSON.stringify(b)) { shouldUpdate = true; prevMergedRef.current = merged; break; }
+                        } catch (_e) {
+                            if (a !== b) { shouldUpdate = true; prevMergedRef.current = merged; break; }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (shouldUpdate) setOptionSquares(merged);
     }, [highlightedSquares, moveOptionSquares, moveFrom]);
 
     useEffect(() => {
-         if (highlightedMoves.length === 0) {
-             setArrows([]);
+         // compute target arrows
+         if (!highlightedMoves || highlightedMoves.length === 0) {
+             setArrows(prev => (prev.length === 0 ? prev : []));
+             lastArrowsJsonRef.current = '[]';
              return;
          }
 
-         const newArrows: Array<{startSquare: Square, endSquare: Square, color: string}> = [];
+         const newArrows: Array<{startSquare: Square, endSquare: Square, color: string}> = highlightedMoves.map(m => ({
+             startSquare: m.from as Square,
+             endSquare: m.to as Square,
+             color: HIGHLIGHT_ARROW_COLOR
+         }));
 
-         for (const move of highlightedMoves) {
-             newArrows.push({
-                 startSquare: move.from as Square,
-                 endSquare: move.to as Square,
-                 color: HIGHLIGHT_ARROW_COLOR
-             });
-         }
-
-         setArrows(newArrows);
+         // functional setter: compare prev to new and only update if different
+         setArrows(prev => {
+             if (prev.length !== newArrows.length) {
+                 try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {};
+                 return newArrows;
+             }
+             for (let i = 0; i < prev.length; i++) {
+                 if (prev[i].startSquare !== newArrows[i].startSquare || prev[i].endSquare !== newArrows[i].endSquare || prev[i].color !== newArrows[i].color) {
+                     try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {};
+                     return newArrows;
+                 }
+             }
+             return prev;
+         });
      }, [highlightedMoves, moveFrom]);
 
     function makeBotMove() {

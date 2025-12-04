@@ -22,6 +22,7 @@ export function createAudioController(): AudioController {
         check: typeof window !== 'undefined' ? new Audio('/sounds/check.mp3') : null,
     } as Record<string, HTMLAudioElement | null>;
 
+    // set sensible volumes
     try {
         if (audios.start) audios.start.volume = 0.5;
         if (audios.end) audios.end.volume = 0.5;
@@ -30,7 +31,21 @@ export function createAudioController(): AudioController {
         if (audios.castle) audios.castle.volume = 0.6;
         if (audios.promotion) audios.promotion.volume = 0.7;
         if (audios.check) audios.check.volume = 0.8;
+        // preload audio to help unlocking playback on first user gesture
+        for (const k of Object.keys(audios)) {
+            const a = audios[k];
+            try {
+                if (a) {
+                    a.preload = 'auto';
+                    // Some browsers require load() to start fetching
+                    a.load();
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
     } catch (e) {
+        // ignore in environments that don't support Audio
     }
 
     function determineAudio(move: Move, opts?: PlayOpts) {
@@ -47,10 +62,15 @@ export function createAudioController(): AudioController {
             const audio = determineAudio(move || ({} as Move), opts);
             if (!audio) return;
             audio.currentTime = 0;
-            setTimeout(() => {
-                audio.play().catch(() => {
+            // try to play immediately (keeps user gesture), otherwise retry shortly after
+            const p = audio.play();
+            if (p && typeof p.then === 'function') {
+                p.catch(() => {
+                    try {
+                        setTimeout(() => { try { audio.play().catch(() => {}); } catch (e) {} }, 60);
+                    } catch (e) {}
                 });
-            }, 50);
+            }
         } catch (e) {
         }
     }
