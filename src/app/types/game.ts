@@ -115,3 +115,11 @@ export const WEIGHT: Record<string, number> = {
     n: 3,
     p: 1,
 };
+
+export const PUZZLE_DIFFICULTY_LEVELS: Record<number, string> = {
+    1: "Très facile",
+    2: "Facile",
+    3: "Moyen",
+    4: "Difficile",
+    5: "Très difficile",
+};

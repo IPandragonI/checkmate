@@ -30,6 +30,7 @@ model User {
   preference UserPreference?
 
   @@map("User")
+  UserPuzzle UserPuzzle[]
 }
 
 model Session {
@@ -162,6 +163,32 @@ model Bot {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   games     Game[]
+}
+
+model Puzzle {
+  id       String @id @default(uuid())
+  number   Int    @unique
+  startFen String
+  solution Json
+  difficulty Int //1-5 scale
+  createdAt DateTime @default(now())
+
+  UserPuzzle UserPuzzle[]
+}
+
+model UserPuzzle {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  puzzle    Puzzle   @relation(fields: [puzzleId], references: [id])
+  puzzleId  String
+  attempts  Int      @default(0)
+  solved    Boolean  @default(false)
+  lastAttemptAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, puzzleId])
 }
 
 enum GameStatus {

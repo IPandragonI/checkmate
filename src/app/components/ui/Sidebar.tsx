@@ -1,11 +1,12 @@
 import Link from "next/link";
 import {APP_TITLE} from "@/lib/constants";
-import {Crown, Menu, Swords, UsersRound, Star, BookOpen, BadgeQuestionMark} from 'lucide-react';
+import {Crown, Menu, Swords, UsersRound, Star, BookOpen, BadgeQuestionMark, Puzzle} from 'lucide-react';
 
 function Sidebar({children}: { children: React.ReactNode }) {
     const menuItems = [
         {name: "Créer une partie", href: "/games/create", icon: Swords},
         {name: "Rejoindre une partie", href: "/games/join", icon: UsersRound},
+        {name: "Problèmes", href: "/puzzle", icon: Puzzle},
         {name: "Classement", href: "/leaderboard", icon: Star},
     ];
 
