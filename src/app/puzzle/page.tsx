@@ -21,6 +21,7 @@ export default function PuzzlePage() {
     const [loading, setLoading] = useState(false);
     const [isStatic, setIsStatic] = useState(true);
     const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
+    const [resetKey, setResetKey] = useState<number>(0);
     const chessRefPrevFen = useRef<string | undefined>(undefined);
     const progressRef = useRef<number>(0); // number of half-moves already applied from solution
 
@@ -55,6 +56,7 @@ export default function PuzzlePage() {
             setBoardOrientation(determineBoardOrientation(data.startFen));
             chessRefPrevFen.current = data.startFen;
             progressRef.current = 0;
+            setResetKey(k => k + 1);
         } catch (e: any) {
             console.error(e);
         } finally {
@@ -96,12 +98,11 @@ export default function PuzzlePage() {
     const handleMove = useCallback(async (move: Move, _isBotMove: boolean) => {
         if (!puzzle) return;
 
-        const idx = progressRef.current; // next expected move index in puzzle.solution
+        const idx = progressRef.current;
         const expected = puzzle.solution[idx];
 
         if (!expected || expected.from !== move.from || expected.to !== move.to) {
             setMessage("Coup incorrect, réessayez.");
-            // reset progress and board
             setMoves([]);
             setCurrentFen(puzzle.startFen);
             setIsStatic(false);
@@ -110,13 +111,9 @@ export default function PuzzlePage() {
             return;
         }
 
-        // correct player move
         setMessage("");
-        // advance progress to account for the player's move
         progressRef.current = idx + 1;
 
-        // Use the fen returned by the chessboard when possible (it's the position after player's move).
-        // If not available, reconstruct from the previous fen and apply the player's move.
         let chess: Chess;
         if (move.fen) {
             chess = new Chess(move.fen);
@@ -128,7 +125,6 @@ export default function PuzzlePage() {
         let appliedOpponentMove: Move | null = null;
         if (progressRef.current < puzzle.solution.length) {
             const opp = puzzle.solution[progressRef.current];
-            // apply opponent move
             const res = chess.move({from: opp.from, to: opp.to, promotion: opp.promotion || 'q'});
             if (res) {
                 appliedOpponentMove = opp as Move;
@@ -140,16 +136,13 @@ export default function PuzzlePage() {
         setCurrentFen(newFen);
         chessRefPrevFen.current = newFen;
 
-        // record moves (store both player and opponent for UI/history)
         if (appliedOpponentMove) {
             setMoves(prev => [...prev, move, appliedOpponentMove as Move]);
         } else {
             setMoves(prev => [...prev, move]);
         }
 
-        // if we've finished all moves
         if (progressRef.current >= puzzle.solution.length) {
-            // send the whole solution sequence to mark solved
             await saveSolved(setLoading, puzzle, fetchNext);
         }
     }, [puzzle, fetchNext]);
@@ -162,6 +155,7 @@ export default function PuzzlePage() {
         setIsStatic(false);
         chessRefPrevFen.current = puzzle.startFen;
         progressRef.current = 0;
+        setResetKey(k => k + 1);
     }, [puzzle]);
 
     return (
@@ -172,6 +166,7 @@ export default function PuzzlePage() {
                     currentFen={currentFen}
                     onMove={handleMove}
                     isStatic={isStatic}
+                    resetKey={resetKey}
                 />
             }
             gamePanel={

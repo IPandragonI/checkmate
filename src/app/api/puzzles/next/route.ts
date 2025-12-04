@@ -24,13 +24,20 @@ export async function GET(_req: NextRequest) {
         }, { status: 200 });
     }
 
-    // otherwise return the first puzzle overall (not assigned)
-    const puzzle = await p.puzzle.findFirst({ orderBy: { number: 'asc' } });
+    const puzzle = await p.puzzle.findFirst({
+        where: {
+            UserPuzzle: { none: { userId: user.id } }
+        },
+        orderBy: { number: 'asc' }
+    });
     if (!puzzle) return NextResponse.json({ error: "Aucun puzzle disponible" }, { status: 404 });
 
-    await p.userPuzzle.create({
-        data: { puzzleId: puzzle.id, userId: user.id }
-    });
+    const existing = await p.userPuzzle.findFirst({ where: { userId: user.id, puzzleId: puzzle.id } });
+    if (!existing) {
+        await p.userPuzzle.create({
+            data: { puzzleId: puzzle.id, userId: user.id }
+        });
+    }
 
     return NextResponse.json({
         puzzleId: puzzle.id,

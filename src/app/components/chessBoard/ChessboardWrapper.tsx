@@ -16,6 +16,7 @@ interface ChessboardWrapperProps {
     canPlay?: boolean;
     isStatic?: boolean;
     isBotTurn?: boolean;
+    resetKey?: number;
 }
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -29,6 +30,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  canPlay = true,
                                                                  isStatic = true,
                                                                  isBotTurn = false,
+                                                                 resetKey = 0,
                                                              }) => {
     const chessGameRef = useRef(new Chess());
     const chessGame = chessGameRef.current;
@@ -41,13 +43,15 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
     const boardStyles = getBoardStyles();
 
     useEffect(() => {
-        if (currentFen && chessGame.fen() !== currentFen) {
+        if (!currentFen) return;
+        try {
             chessGame.load(currentFen);
             setChessPosition(currentFen);
-            return
+        } catch (e) {
+            console.error('Failed to load FEN in ChessboardWrapper', e);
         }
 
-    }, [currentFen]);
+    }, [currentFen, resetKey]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -59,7 +63,7 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
             setFirstMoveMade(true);
             setTimeout(makeBotMove, 500);
         }
-    }, [botElo, isOnline, canPlay, isBotTurn, firstMoveMade]);
+    }, [botElo, isOnline, canPlay, isBotTurn, firstMoveMade, chessGame]);
 
     function makeBotMove() {
         if (chessGame.isGameOver()) {
