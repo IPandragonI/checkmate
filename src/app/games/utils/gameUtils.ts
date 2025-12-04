@@ -52,7 +52,7 @@ export async function handleGameOver({chess, playerWhite, playerBlack, router}: 
             cancelButtonText: 'Retour au menu',
         }).then((res) => {
             if (res.isConfirmed) {
-                router.push("/create");
+                router.push("/games/create");
             } else if (res.isDismissed) {
                 router.push("/");
             }
