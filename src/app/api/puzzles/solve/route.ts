@@ -7,35 +7,34 @@ export async function POST(req: NextRequest) {
     if (!user?.id) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const { puzzleId, moves } = body as { puzzleId?: string; moves?: any[] };
-    if (!puzzleId || !Array.isArray(moves)) return NextResponse.json({ error: "Données invalides" }, { status: 400 });
+    const { puzzleId } = body as { puzzleId?: string; };
+    if (!puzzleId) return NextResponse.json({ error: "Id du puzzle manquant" }, { status: 400 });
 
     const p = prisma as any;
 
     const puzzle = await p.puzzle.findUnique({ where: { id: puzzleId } });
     if (!puzzle) return NextResponse.json({ error: "Puzzle introuvable" }, { status: 404 });
 
-    // solution stored as JSON in puzzle.solution, compare moves arrays simply
-    let solution: any;
-    try { solution = typeof puzzle.solution === 'string' ? JSON.parse(puzzle.solution) : puzzle.solution; } catch (e) { solution = puzzle.solution; }
-
-    const isCorrect = JSON.stringify(solution) === JSON.stringify(moves);
-
-    await p.userPuzzle.upsert({
-        where: { userId_puzzleId: { userId: user.id, puzzleId: puzzle.id } },
-        update: {
-            attempts: { increment: 1 },
-            solved: isCorrect,
-            lastAttemptAt: new Date()
-        },
-        create: {
-            userId: user.id,
-            puzzleId: puzzle.id,
-            attempts: 1,
-            solved: isCorrect,
-            lastAttemptAt: new Date()
-        }
+    await p.userPuzzle.update({
+        where: { userId: user.id, puzzleId: puzzleId },
+        data: { solved: true, solvedAt: new Date() }
     });
 
-    return NextResponse.json({ success: true, correct: isCorrect }, { status: 200 });
+    const nextPuzzle = await p.puzzle.findFirst({
+        where: {
+            id: { notIn: p.userPuzzle.findMany({
+                where: { userId: user.id, solved: true },
+                select: { puzzleId: true }
+            }).then((ups: any[]) => ups.map(up => up.puzzleId)) }
+        },
+        orderBy: { number: 'asc' }
+    });
+
+    if (nextPuzzle) {
+        await p.userPuzzle.create({
+            data: { puzzleId: nextPuzzle.id, userId: user.id }
+        });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
 }
