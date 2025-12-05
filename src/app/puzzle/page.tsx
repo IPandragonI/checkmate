@@ -287,6 +287,7 @@ export default function PuzzlePage() {
                     loading={loading}
                     errorMessage={errorMessage}
                     puzzleNumber={puzzle?.number || 0}
+                    nbMoves={puzzle?.solution.length || 0}
                     difficulty={puzzle?.difficulty || 0}
                     isSolved={progressRef.current >= (puzzle?.solution.length || 0)}
                     onReset={resetPuzzle}
