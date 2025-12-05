@@ -18,7 +18,7 @@ export function createAudioController(): AudioController {
         move: typeof window !== 'undefined' ? new Audio('/sounds/move-self.mp3') : null,
         capture: typeof window !== 'undefined' ? new Audio('/sounds/capture.mp3') : null,
         castle: typeof window !== 'undefined' ? new Audio('/sounds/castle.mp3') : null,
-        promotion: typeof window !== 'undefined' ? new Audio('/sounds/promotion.mp3') : null,
+        promotion: typeof window !== 'undefined' ? new Audio('/sounds/promote.mp3') : null,
         check: typeof window !== 'undefined' ? new Audio('/sounds/check.mp3') : null,
     } as Record<string, HTMLAudioElement | null>;
 

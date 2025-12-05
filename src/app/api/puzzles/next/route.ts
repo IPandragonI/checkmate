@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest) {
         },
         orderBy: { number: 'asc' }
     });
-    if (!puzzle) return NextResponse.json({ error: "Aucun puzzle disponible" }, { status: 404 });
+    if (!puzzle) return NextResponse.json({ error: "Aucun nouveau puzzle disponible" }, { status: 404 });
 
     const existing = await p.userPuzzle.findFirst({ where: { userId: user.id, puzzleId: puzzle.id } });
     if (!existing) {

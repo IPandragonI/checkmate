@@ -3,10 +3,13 @@
 import React, {useEffect, useState, useCallback, useRef} from "react";
 import GameLayout from "@/app/components/game/GameLayout";
 import PuzzleInfos from "@/app/components/game/panel/PuzzleInfos";
-import ChessboardWrapper, {HIGHLIGHT_SQUARE_COLOR} from "@/app/components/chessBoard/ChessboardWrapper";
+import ChessboardWrapper, {
+    ERROR_SQUARE_COLOR,
+    HIGHLIGHT_SQUARE_COLOR
+} from "@/app/components/chessBoard/ChessboardWrapper";
 import {Move} from "@/app/types/game";
 import {Chess} from "chess.js";
-import { createAudioController, AudioController } from '@/lib/audio';
+import {createAudioController, AudioController} from '@/lib/audio';
 
 export default function PuzzlePage() {
     const [puzzle, setPuzzle] = useState<{
@@ -17,8 +20,8 @@ export default function PuzzlePage() {
         difficulty: number
     } | null>(null);
     const [currentFen, setCurrentFen] = useState<string | undefined>(undefined);
-    const [moves, setMoves] = useState<Move[]>([]);
-    const [message, setMessage] = useState<string>("");
+    const [, setMoves] = useState<Move[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [isStatic, setIsStatic] = useState(true);
     const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
@@ -30,11 +33,32 @@ export default function PuzzlePage() {
     const progressRef = useRef<number>(0); // number of half-moves already applied from solution
     const audioCtrlRef = useRef<AudioController | null>(null);
 
-    const determineBoardOrientation = (useCallback((fen: string) => {
+    // helpers
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const applyMoveAndGetFen = (chess: Chess, move: Move, skipIfMoveHasFen = false) => {
+        if (!skipIfMoveHasFen || !move.fen) {
+            chess.move({from: move.from, to: move.to, promotion: move.promotion || 'q'});
+        }
+        return chess.fen();
+    };
+
+    const playMoveSound = (move: Move, chess: Chess) => {
+        try {
+            if (!audioCtrlRef.current) audioCtrlRef.current = createAudioController();
+            const isCastle = chess.get(move.to as any)?.type === 'k' && ['g1', 'c1', 'g8', 'c8'].includes(move.to);
+            audioCtrlRef.current?.playSound(move, {isCheck: chess.isCheck(), isCastle});
+        } catch (e) {
+            // ignore audio errors
+        }
+    };
+
+    const determineBoardOrientation = useCallback((fen: string) => {
         const parts = fen.split(' ');
         if (parts.length < 2) return "white";
-        return parts[1] === 'w' ? "white" : "black";
-    }, []));
+        // the first side to move is the opponent's
+        return parts[1] === 'w' ? "black" : "white";
+    }, []);
 
     const fetchNext = useCallback(async () => {
         setLoading(true);
@@ -42,11 +66,12 @@ export default function PuzzlePage() {
             const res = await fetch('/api/puzzles/next');
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                setLoading(false);
-                setMessage(err.error || "Erreur lors du chargement du puzzle.");
+                setErrorMessage(err.error || "Erreur lors du chargement du puzzle.");
                 return;
             }
             const data = await res.json();
+            if (!data) return;
+
             setPuzzle({
                 puzzleId: data.puzzleId,
                 number: data.number,
@@ -54,10 +79,11 @@ export default function PuzzlePage() {
                 difficulty: data.difficulty,
                 solution: data.solution || []
             });
+
             setCurrentFen(data.startFen);
             setMoves([]);
             setIsStatic(false);
-            setMessage("");
+            setErrorMessage("");
             setBoardOrientation(determineBoardOrientation(data.startFen));
             setHelpLevel(0);
             setHelpSquare([]);
@@ -65,6 +91,17 @@ export default function PuzzlePage() {
             chessRefPrevFen.current = data.startFen;
             progressRef.current = 0;
             setResetKey(k => k + 1);
+
+            await sleep(1000);
+            const chess = new Chess(data.startFen);
+            const firstMove = data.solution[0];
+            if (firstMove) {
+                const newFen = applyMoveAndGetFen(chess, firstMove, true);
+                chessRefPrevFen.current = newFen;
+                setCurrentFen(newFen);
+                setMoves([firstMove]);
+                progressRef.current = 1;
+            }
         } catch (e: any) {
             console.error(e);
         } finally {
@@ -72,26 +109,18 @@ export default function PuzzlePage() {
         }
     }, [determineBoardOrientation]);
 
-    async function saveSolved(setLoading: (value: (((prevState: boolean) => boolean) | boolean)) => void, puzzle: {
-        puzzleId: string;
-        number: number;
-        startFen: string;
-        solution: Array<Move>;
-        difficulty: number
-    }, fetchNext: () => Promise<void>) {
+    async function updatePuzzle(puzzleId: string, solved: boolean = false) {
         setLoading(true);
         try {
-            const res = await fetch('/api/puzzles/solve', {
+            const res = await fetch('/api/puzzles/update', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({puzzleId: puzzle.puzzleId})
+                body: JSON.stringify({puzzleId: puzzleId, solved}),
             });
             if (!res.ok) {
-                setLoading(false);
-                setMessage("Erreur lors de l'enregistrement du puzzle.");
+                setErrorMessage("Erreur lors de l'enregistrement du puzzle.");
                 return;
             }
-            await fetchNext();
         } catch (e: any) {
             console.error(e);
         } finally {
@@ -113,14 +142,13 @@ export default function PuzzlePage() {
         function unlockAudioOnce() {
             try {
                 if (!audioCtrlRef.current) audioCtrlRef.current = createAudioController();
-                audioCtrlRef.current.playSound({} as Move, { startOrEnd: 'START' });
             } catch (e) {
                 // ignore
             }
         }
 
         if (typeof window !== 'undefined') {
-            window.addEventListener('pointerdown', unlockAudioOnce, { once: true });
+            window.addEventListener('pointerdown', unlockAudioOnce, {once: true});
         }
 
         return () => {
@@ -131,75 +159,115 @@ export default function PuzzlePage() {
 
     const handleMove = useCallback(async (move: Move, _isBotMove: boolean) => {
         if (!puzzle) return;
-        let chess: Chess;
-        if (move.fen) {
-            chess = new Chess(move.fen);
-        } else {
-            chess = new Chess(chessRefPrevFen.current);
+
+        const chess = new Chess(move.fen || chessRefPrevFen.current);
+        if (!move.fen) {
             chess.move({from: move.from, to: move.to, promotion: move.promotion || 'q'});
         }
-        try {
-            if (!audioCtrlRef.current) {
-                try { audioCtrlRef.current = createAudioController(); } catch (e) { /* ignore */ }
-            }
-            const isCastle = chess.get(move.to as any)?.type === 'k' && ['g1','c1','g8','c8'].includes(move.to);
-            audioCtrlRef.current?.playSound(move, { isCheck: chess.isCheck(), isCastle });
-        } catch (e) {}
+
+        playMoveSound(move, chess);
 
         const idx = progressRef.current;
         const expected = puzzle.solution[idx];
 
         if (!expected || expected.from !== move.from || expected.to !== move.to) {
-            setMessage("Coup incorrect, réessayez.");
+            setErrorMessage("Coup incorrect, réessayez.");
             setMoves([]);
-            setCurrentFen(puzzle.startFen);
-            setIsStatic(false);
-            chessRefPrevFen.current = puzzle.startFen;
-            progressRef.current = 0;
+            setIsStatic(true);
+            setHelpSquare([
+                {[move.from]: {backgroundColor: ERROR_SQUARE_COLOR}},
+                {[move.to]: {backgroundColor: ERROR_SQUARE_COLOR}}
+            ]);
+            await updatePuzzle(puzzle.puzzleId);
             return;
         }
 
-        setMessage("");
+        setErrorMessage("");
         setHelpLevel(0);
         setHelpSquare([]);
         setHelpMove([]);
-        progressRef.current = idx + 1;
+        progressRef.current++;
 
-        chessRefPrevFen.current = chess.fen();
-        setCurrentFen(chess.fen());
-        setMoves(prevMoves => [...prevMoves, move]);
+        const newFen = chess.fen();
+        chessRefPrevFen.current = newFen;
+        setCurrentFen(newFen);
+        setMoves(prev => [...prev, move]);
 
-        if (progressRef.current >= puzzle.solution.length) {
-            await saveSolved(setLoading, puzzle, fetchNext);
+        const nextMove = puzzle.solution[progressRef.current];
+        if (nextMove) {
+            await sleep(600);
+
+            chess.move({from: nextMove.from, to: nextMove.to, promotion: nextMove.promotion || 'q'});
+            const nextFen = chess.fen();
+            chessRefPrevFen.current = nextFen;
+            setCurrentFen(nextFen);
+            setMoves(prev => [...prev, nextMove]);
+
+            playMoveSound(nextMove, chess);
+            progressRef.current++;
+        } else if (progressRef.current >= puzzle.solution.length) {
+            await updatePuzzle(puzzle.puzzleId, true);
         }
-    }, [puzzle, fetchNext]);
+    }, [puzzle]);
 
     const resetPuzzle = useCallback(() => {
         if (!puzzle) return;
         setMoves([]);
         setCurrentFen(puzzle.startFen);
-        setMessage("");
+        setErrorMessage("");
         setIsStatic(false);
+        setHelpLevel(0);
+        setHelpSquare([]);
+        setHelpMove([]);
         chessRefPrevFen.current = puzzle.startFen;
         progressRef.current = 0;
         setResetKey(k => k + 1);
+
+        const firstMove = puzzle.solution[0];
+        if (firstMove) {
+            const chess = new Chess(puzzle.startFen);
+            const newFen = applyMoveAndGetFen(chess, firstMove, true);
+            chessRefPrevFen.current = newFen;
+            setCurrentFen(newFen);
+            setMoves([firstMove]);
+            progressRef.current = 1;
+        }
     }, [puzzle]);
 
     const helpPuzzle = useCallback(() => {
         if (!puzzle) return;
-        const idx = progressRef.current;
-        const nextMove = puzzle.solution[idx];
+
+        const nextMove = puzzle.solution[progressRef.current];
         if (!nextMove) return;
 
-        const newHelpLevel = helpLevel + 1;
-        if (helpLevel != 2) setHelpLevel(newHelpLevel);
+        const newHelpLevel = Math.min(helpLevel + 1, 2);
+        setHelpLevel(newHelpLevel);
 
         if (newHelpLevel === 1) {
             setHelpSquare([{[nextMove.from]: {backgroundColor: HIGHLIGHT_SQUARE_COLOR}}]);
-        } else if (newHelpLevel === 2) {
+        } else {
             setHelpMove([nextMove]);
         }
     }, [puzzle, helpLevel]);
+
+    const fullResetPuzzles = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/puzzles/reset', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+            });
+            if (!res.ok) {
+                setErrorMessage("Erreur lors de la réinitialisation des puzzles.");
+                return;
+            }
+            await fetchNext();
+        } catch (e: any) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchNext]);
 
     return (
         <GameLayout
@@ -217,11 +285,14 @@ export default function PuzzlePage() {
             gamePanel={
                 <PuzzleInfos
                     loading={loading}
-                    message={message}
+                    errorMessage={errorMessage}
                     puzzleNumber={puzzle?.number || 0}
                     difficulty={puzzle?.difficulty || 0}
+                    isSolved={progressRef.current >= (puzzle?.solution.length || 0)}
                     onReset={resetPuzzle}
+                    onFullReset={fullResetPuzzles}
                     onHelp={helpPuzzle}
+                    onNext={fetchNext}
                 />
             }
         />

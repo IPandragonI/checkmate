@@ -1,28 +1,37 @@
 import Loader from "@/app/utils/Loader";
-import {RotateCcw, Lightbulb} from "lucide-react"
+import {RotateCcw, Lightbulb, ChevronRight, Eraser} from "lucide-react"
 import {Svg} from "@/app/utils/Svg";
 import ColorCard from "@/app/components/field/ColorCard";
 import {PUZZLE_DIFFICULTY_LEVELS} from "@/app/types/game";
 
 interface PuzzleInfosProps {
     loading?: boolean;
-    message?: string;
+    errorMessage?: string;
     colorToPlay?: 'w' | 'b';
     puzzleNumber?: number;
     difficulty?: number;
+    isSolved?: boolean;
     onReset?: () => void;
+    onFullReset?: () => void;
     onHelp?: () => void;
+    onNext?: () => void;
 }
 
 const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                                                      loading = false,
-                                                     message = '',
+                                                     errorMessage = '',
                                                      colorToPlay = 'w',
                                                      puzzleNumber = 0,
                                                      difficulty = 0,
+                                                     isSolved = false,
                                                      onReset = () => {
                                                      },
+                                                     onFullReset = () => {
+
+                                                     },
                                                      onHelp = () => {
+                                                     },
+                                                     onNext = () => {
                                                      },
                                                  }) => {
     return (
@@ -47,9 +56,9 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                                 <div className="text-lg font-bold">Trait aux
                                     : {colorToPlay === 'w' ? 'Blancs' : 'Noirs'}</div>
                             </div>
-                            {message && (
+                            {errorMessage && (
                                 <div className="mb-4 p-2 bg-red-100 text-red-800 rounded-md text-center">
-                                    {message}
+                                    {errorMessage}
                                 </div>
                             )}
                             <div className="text-lg">Problème n°{puzzleNumber}</div>
@@ -58,7 +67,16 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                         </div>
                     )}
             </div>
-            {message && (
+            {isSolved && errorMessage && (
+                <button
+                    onClick={onFullReset}
+                    className={`btn btn-outline btn-error flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
+                >
+                    <Eraser size={16}/>
+                    Réinitialiser mon avancée
+                </button>
+            )}
+            {!isSolved && errorMessage && (
                 <button
                     onClick={onReset}
                     className={`btn btn-outline btn-error flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
@@ -67,13 +85,22 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                     Réinitialiser
                 </button>
             )}
-            {!message && (
+            {!isSolved && !errorMessage && (
                 <button
                     onClick={onHelp}
                     className={`btn btn-outline btn-secondary flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
                 >
                     <Lightbulb size={16}/>
                     Indication
+                </button>
+            )}
+            {isSolved && !errorMessage && (
+                <button
+                    onClick={onNext}
+                    className={`btn btn-outline btn-primary flex items-center gap-2 ${loading ? 'btn-disabled' : ''}`}
+                >
+                    <ChevronRight size={16}/>
+                    Problème Suivant
                 </button>
             )}
         </section>

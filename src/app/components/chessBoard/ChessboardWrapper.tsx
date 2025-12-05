@@ -23,6 +23,7 @@ interface ChessboardWrapperProps {
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 const MOVE_FROM_COLOR = 'rgb(34,111,227, 0.56)';
+export const ERROR_SQUARE_COLOR = 'rgba(228, 92, 92, 0.56)';
 export const HIGHLIGHT_SQUARE_COLOR = 'rgba(62, 181, 93, 0.56)';
 const HIGHLIGHT_ARROW_COLOR = 'rgba(246, 206, 84, 0.8)';
 
@@ -138,15 +139,14 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
              color: HIGHLIGHT_ARROW_COLOR
          }));
 
-         // functional setter: compare prev to new and only update if different
          setArrows(prev => {
              if (prev.length !== newArrows.length) {
-                 try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {};
+                 try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {}
                  return newArrows;
              }
              for (let i = 0; i < prev.length; i++) {
                  if (prev[i].startSquare !== newArrows[i].startSquare || prev[i].endSquare !== newArrows[i].endSquare || prev[i].color !== newArrows[i].color) {
-                     try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {};
+                     try { lastArrowsJsonRef.current = JSON.stringify(newArrows); } catch {}
                      return newArrows;
                  }
              }
@@ -272,6 +272,9 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                  fen: getFenAfterMove(moveFrom as Square, square as Square, fenBefore) as string,
                  capturedPiece: move?.captured
              }, false);
+
+             const botMoveDelay = Math.random() * (3000 - 800) + 800;
+             if (!isOnline && botElo) setTimeout(makeBotMove, botMoveDelay);
          } catch {
              const hasMoveOptions = getMoveOptions(square as Square);
 
@@ -313,7 +316,6 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
              setChessPosition(chessGame.fen());
 
              setMoveFrom('');
-             // move completed via drag: clear internal bullets
              setMoveOptionSquares({});
 
              const botMoveDelay = Math.random() * (3000 - 800) + 800;
