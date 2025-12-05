@@ -105,6 +105,7 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
                 setCurrentFen(newFen);
                 setMoves([firstMove]);
                 progressRef.current = 1;
+                playMoveSound(firstMove, chess);
             }
         } catch (e: any) {
             console.error(e);
