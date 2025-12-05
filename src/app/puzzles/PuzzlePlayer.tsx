@@ -111,7 +111,7 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
         } finally {
             setLoading(false);
         }
-    }, [determineBoardOrientation]);
+    }, [determineBoardOrientation, themeCategory]);
 
     async function updatePuzzle(puzzleId: string, solved: boolean = false) {
         try {

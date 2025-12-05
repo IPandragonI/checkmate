@@ -1,14 +1,15 @@
 import React from 'react';
 import {PuzzlePlayer} from '@/app/puzzles/PuzzlePlayer';
 
-interface Props {
-  params: { themeCategory: string };
-}
+export default async function ThemeCategoryPage({ params }: { params: Promise<{ themeCategory: string }> }) {
+    const resolved = await params;
+    const themeCategory = decodeURIComponent(resolved?.themeCategory);
 
-export default async function ThemeCategoryPage({ params }: Props) {
-  const themeCategory = await decodeURIComponent(params.themeCategory);
-  return (
+    if (!themeCategory) {
+        return <div className="p-8 text-center text-red-500">Paramètre de catégorie de thème manquant</div>;
+    }
+
+    return (
       <PuzzlePlayer themeCategory={themeCategory} />
   );
 }
-

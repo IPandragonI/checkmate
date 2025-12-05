@@ -54,7 +54,7 @@ const Dashboard = () => {
                         <GamesInProgressSection gameHistory={gameHistory} user={user}/>
 
                         <div className="col-span-4 row-span-1 lg:hidden block">
-                            <StatisticsSection gameHistory={gameHistory} user={user}/>
+                            <StatisticsSection gameHistory={gameHistory} user={user} puzzleHistory={puzzleHistory}/>
                         </div>
                     </div>
                     {/* Colonne de blocs à droite (visible seulement sur pc) */}
