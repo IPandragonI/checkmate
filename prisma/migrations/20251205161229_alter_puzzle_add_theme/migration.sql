@@ -1,0 +1,16 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `number` on the `Puzzle` table. All the data in the column will be lost.
+  - Added the required column `theme` to the `Puzzle` table without a default value. This is not possible if the table is not empty.
+
+*/
+-- CreateEnum
+CREATE TYPE "PuzzleTheme" AS ENUM ('ADVANCEDPAWN', 'ADVANTAGE', 'ARABIANMATE', 'ATTACKINGF2F7', 'ATTRACTION', 'BACKRANKMATE', 'BISHOPENDGAME', 'BODENMATE', 'CAPTURINGDEFENDER', 'CLEARANCE', 'CORNERMATE', 'CRUSHING', 'DEFENSIVEMOVE', 'DEFLECTION', 'DISCOVEREDATTACK', 'DOUBLEBISHOPMATE', 'DOUBLECHECK', 'ENDGAME', 'ENPASSANT', 'EQUALITY', 'EXPOSEDKING', 'FORK', 'HANGINGPIECE', 'HOOKMATE', 'INTERFERENCE', 'INTERMEZZO', 'KINGSIDEATTACK', 'KNIGHTENDGAME', 'LONG', 'MASTER', 'MASTERVSMASTER', 'MATE', 'MATEIN1', 'MATEIN2', 'MATEIN3', 'MATEIN4', 'MIDDLEGAME', 'ONEMOVE', 'OPENING', 'PAWNENDGAME', 'PIN', 'PROMOTION', 'QUEENENDGAME', 'QUEENROOKENDGAME', 'QUEENSIDEATTACK', 'QUIETMOVE', 'ROOKENDGAME', 'SACRIFICE', 'SHORT', 'SKEWER', 'SMOTHEREDMATE', 'SUPERGM', 'TRAPPEDPIECE', 'VERYLONG', 'VUKOVICMATE', 'XRAYATTACK', 'ZUGZWANG');
+
+-- DropIndex
+DROP INDEX "public"."Puzzle_number_key";
+
+-- AlterTable
+ALTER TABLE "Puzzle" DROP COLUMN "number",
+ADD COLUMN     "theme" "PuzzleTheme" NOT NULL;

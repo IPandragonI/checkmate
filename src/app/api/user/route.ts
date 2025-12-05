@@ -38,7 +38,16 @@ export async function GET() {
         orderBy: {createdAt: 'asc'}
     });
 
-    return NextResponse.json({user: completeUser, gameHistory, ratingHistory});
+    const puzzleHistory = await prisma.userPuzzle.findMany({
+        where: {userId: user.id},
+        include: {
+            puzzle: true
+        },
+        orderBy: {createdAt: 'desc'},
+        take: 10
+    });
+
+    return NextResponse.json({user: completeUser, gameHistory, ratingHistory, puzzleHistory});
 }
 export async function PATCH(req: NextRequest) {
     const user = await getUserFromRequest();

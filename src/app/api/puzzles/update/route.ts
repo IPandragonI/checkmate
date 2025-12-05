@@ -21,26 +21,5 @@ export async function POST(req: NextRequest) {
         create: { userId: user.id, puzzleId: puzzleId, attempts: 1, solved: solved, lastAttemptAt: new Date() }
     });
 
-    if (solved) {
-        const solvedRows = await p.userPuzzle.findMany({
-            where: { userId: user.id, solved: true },
-            select: { puzzleId: true }
-        });
-        const solvedIds = solvedRows.map((r: any) => r.puzzleId);
-
-        const nextPuzzle = await p.puzzle.findFirst({
-            where: solvedIds.length ? { id: { notIn: solvedIds } } : {},
-            orderBy: { number: 'asc' }
-        });
-
-        if (nextPuzzle) {
-            await p.userPuzzle.upsert({
-                where: { userId_puzzleId: { userId: user.id, puzzleId: nextPuzzle.id } },
-                update: {},
-                create: { puzzleId: nextPuzzle.id, userId: user.id, attempts: 0, solved: false }
-            });
-        }
-    }
-
     return NextResponse.json({ success: true }, { status: 200 });
 }

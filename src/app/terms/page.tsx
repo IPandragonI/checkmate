@@ -3,7 +3,7 @@ import Footer from '@/app/components/ui/Footer';
 export default function TermsPage() {
     return (
         <main className="p-6 space-y-6 text-base-content">
-            <h1 className="text-2xl font-bold">Conditions d'utilisation</h1>
+            <h1 className="text-3xl font-bold">Conditions d'utilisation</h1>
 
             <div className="rounded-xl bg-base-200 shadow p-6 space-y-4">
                 <p>

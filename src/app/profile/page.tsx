@@ -116,7 +116,7 @@ export default function ProfilePage() {
 
     return (
         <main className="p-6 space-y-4 text-base-content">
-            <h1 className="text-2xl font-bold mb-10">Profil</h1>
+            <h1 className="text-3xl font-bold mb-10">Profil</h1>
             {error && <p className="text-red-500">{error}</p>}
             <div className="flex flex-col lg:flex-row items-stretch gap-6">
 

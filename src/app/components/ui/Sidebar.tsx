@@ -6,7 +6,7 @@ function Sidebar({children}: { children: React.ReactNode }) {
     const menuItems = [
         {name: "Créer une partie", href: "/games/create", icon: Swords},
         {name: "Rejoindre une partie", href: "/games/join", icon: UsersRound},
-        {name: "Problèmes", href: "/puzzle", icon: Puzzle},
+        {name: "Problèmes", href: "/puzzles", icon: Puzzle},
         {name: "Classement", href: "/leaderboard", icon: Star},
     ];
 

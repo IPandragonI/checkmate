@@ -45,7 +45,7 @@ export default function ContactPage() {
 
     return (
         <main className="p-6 space-y-6 text-base-content">
-            <h1 className="text-2xl font-bold">Contact</h1>
+            <h1 className="text-3xl font-bold">Contact</h1>
 
             <div className="rounded-xl bg-base-200 shadow p-6 space-y-4 w-full">
                 <p>Si tu as une question ou veux nous signaler un problème, utilise ce formulaire.</p>

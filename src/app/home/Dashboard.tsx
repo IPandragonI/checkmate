@@ -15,6 +15,7 @@ const Dashboard = () => {
     const [user, setUser] = useState(null);
     const [gameHistory, setGameHistory] = useState([]);
     const [ratingHistory, setRatingHistory] = useState([]);
+    const [puzzleHistory, setPuzzleHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -26,6 +27,7 @@ const Dashboard = () => {
                 setUser(data.user);
                 setGameHistory(data.gameHistory);
                 setRatingHistory(data.ratingHistory);
+                setPuzzleHistory(data.puzzleHistory);
                 setLoading(false);
             });
     }, [session?.user?.id]);
@@ -57,7 +59,7 @@ const Dashboard = () => {
                     </div>
                     {/* Colonne de blocs à droite (visible seulement sur pc) */}
                     <div className="flex flex-col gap-4 lg:block hidden">
-                        <StatisticsSection gameHistory={gameHistory} user={user}/>
+                        <StatisticsSection gameHistory={gameHistory} user={user} puzzleHistory={puzzleHistory}/>
                     </div>
                 </div>
 

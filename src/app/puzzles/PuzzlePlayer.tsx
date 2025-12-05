@@ -11,10 +11,14 @@ import {Move} from "@/app/types/game";
 import {Chess} from "chess.js";
 import {createAudioController, AudioController} from '@/lib/audio';
 
-export default function PuzzlePage() {
+interface Props {
+    themeCategory?: string;
+}
+
+export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
     const [puzzle, setPuzzle] = useState<{
         puzzleId: string;
-        number: number;
+        themes: string[];
         startFen: string;
         solution: Array<Move>;
         difficulty: number
@@ -63,7 +67,7 @@ export default function PuzzlePage() {
     const fetchNext = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/puzzles/next');
+            const res = await fetch('/api/puzzles/next?themeCategory=' + themeCategory)
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 setErrorMessage(err.error || "Erreur lors du chargement du puzzle.");
@@ -74,7 +78,7 @@ export default function PuzzlePage() {
 
             setPuzzle({
                 puzzleId: data.puzzleId,
-                number: data.number,
+                themes: data.themes,
                 startFen: data.startFen,
                 difficulty: data.difficulty,
                 solution: data.solution || []
@@ -110,7 +114,6 @@ export default function PuzzlePage() {
     }, [determineBoardOrientation]);
 
     async function updatePuzzle(puzzleId: string, solved: boolean = false) {
-        setLoading(true);
         try {
             const res = await fetch('/api/puzzles/update', {
                 method: 'POST',
@@ -123,8 +126,6 @@ export default function PuzzlePage() {
             }
         } catch (e: any) {
             console.error(e);
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -251,7 +252,6 @@ export default function PuzzlePage() {
     }, [puzzle, helpLevel]);
 
     const fullResetPuzzles = useCallback(async () => {
-        setLoading(true);
         try {
             const res = await fetch('/api/puzzles/reset', {
                 method: 'POST',
@@ -264,8 +264,6 @@ export default function PuzzlePage() {
             await fetchNext();
         } catch (e: any) {
             console.error(e);
-        } finally {
-            setLoading(false);
         }
     }, [fetchNext]);
 
@@ -286,7 +284,7 @@ export default function PuzzlePage() {
                 <PuzzleInfos
                     loading={loading}
                     errorMessage={errorMessage}
-                    puzzleNumber={puzzle?.number || 0}
+                    themes={puzzle?.themes || []}
                     nbMoves={puzzle?.solution.length || 0}
                     difficulty={puzzle?.difficulty || 0}
                     isSolved={progressRef.current >= (puzzle?.solution.length || 0)}

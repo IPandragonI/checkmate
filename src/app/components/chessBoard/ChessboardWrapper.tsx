@@ -19,6 +19,7 @@ interface ChessboardWrapperProps {
     resetKey?: number;
     highlightedSquares?: Array<Record<string, React.CSSProperties>>;
     highlightedMoves?: Array<Move>;
+    showAnimations?: boolean;
 }
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -38,7 +39,8 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
                                                                  isBotTurn = false,
                                                                  resetKey = 0,
                                                                  highlightedSquares = [],
-                                                                 highlightedMoves = []
+                                                                 highlightedMoves = [],
+                                                                 showAnimations = true,
                                                              }) => {
     const chessGameRef = useRef(new Chess());
     const chessGame = chessGameRef.current;
@@ -332,7 +334,9 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         position: chessPosition,
         squareStyles: optionSquares,
         arrows: arrows,
-        id: 'click-or-drag-to-move'
+        showAnimations: showAnimations,
+        id: 'click-or-drag-to-move',
+        allowDragging: canPlay && (!isOnline || isBotTurn) && !isStatic,
     };
 
     if (!isStatic) {
