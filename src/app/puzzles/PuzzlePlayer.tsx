@@ -24,7 +24,7 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
         difficulty: number
     } | null>(null);
     const [currentFen, setCurrentFen] = useState<string | undefined>(undefined);
-    const [, setMoves] = useState<Move[]>([]);
+    const [moves, setMoves] = useState<Move[]>([]);
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [isStatic, setIsStatic] = useState(true);
@@ -37,7 +37,6 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
     const progressRef = useRef<number>(0); // number of half-moves already applied from solution
     const audioCtrlRef = useRef<AudioController | null>(null);
 
-    // helpers
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     const applyMoveAndGetFen = (chess: Chess, move: Move, skipIfMoveHasFen = false) => {
@@ -173,8 +172,7 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
         const expected = puzzle.solution[idx];
 
         if (!expected || expected.from !== move.from || expected.to !== move.to) {
-            setErrorMessage("Coup incorrect, réessayez.");
-            setMoves([]);
+            setErrorMessage("Ce n'est pas le bon coup. Réessaie !");
             setIsStatic(true);
             setHelpSquare([
                 {[move.from]: {backgroundColor: ERROR_SQUARE_COLOR}},
@@ -214,27 +212,26 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
 
     const resetPuzzle = useCallback(() => {
         if (!puzzle) return;
-        setMoves([]);
-        setCurrentFen(puzzle.startFen);
+        setCurrentFen(chessRefPrevFen.current);
         setErrorMessage("");
         setIsStatic(false);
         setHelpLevel(0);
         setHelpSquare([]);
         setHelpMove([]);
-        chessRefPrevFen.current = puzzle.startFen;
-        progressRef.current = 0;
         setResetKey(k => k + 1);
 
-        const firstMove = puzzle.solution[0];
-        if (firstMove) {
-            const chess = new Chess(puzzle.startFen);
-            const newFen = applyMoveAndGetFen(chess, firstMove, true);
-            chessRefPrevFen.current = newFen;
-            setCurrentFen(newFen);
-            setMoves([firstMove]);
-            progressRef.current = 1;
+        if (moves.length === 1) {
+            const firstMove = puzzle.solution[0];
+            if (firstMove) {
+                const chess = new Chess(puzzle.startFen);
+                const newFen = applyMoveAndGetFen(chess, firstMove, true);
+                chessRefPrevFen.current = newFen;
+                setCurrentFen(newFen);
+                setMoves([firstMove]);
+                progressRef.current = 1;
+            }
         }
-    }, [puzzle]);
+    }, [puzzle, moves]);
 
     const helpPuzzle = useCallback(() => {
         if (!puzzle) return;
@@ -286,7 +283,6 @@ export const PuzzlePlayer: React.FC<Props> = ({themeCategory}) => {
                     loading={loading}
                     errorMessage={errorMessage}
                     themes={puzzle?.themes || []}
-                    nbMoves={puzzle?.solution.length || 0}
                     difficulty={puzzle?.difficulty || 0}
                     isSolved={progressRef.current >= (puzzle?.solution.length || 0)}
                     onReset={resetPuzzle}

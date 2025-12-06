@@ -16,7 +16,7 @@ export default function PuzzlesIndexPage() {
                         <div className="flex item-center justify-between w-full px-1">
                             <h2 className="text-xl font-semibold">{cat.label}</h2>
                             <Link key={cat.key} href={`/puzzles/${encodeURIComponent(cat.key)}`}
-                                  className="btn btn-outline btn-sm">
+                                  className="btn btn-secondary btn-outline btn-sm">
                                 Résoudre
                             </Link>
                         </div>

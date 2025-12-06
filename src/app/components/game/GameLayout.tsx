@@ -54,7 +54,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                 </div>
             </div>
 
-            <div className={`w-full h-full md:w-2/5 ${isGameStarted ? "hidden" : ""} md:flex max-h-[50rem] md:max-h-full`}>
+            <div className={`w-full h-full md:w-2/5 ${isGameStarted ? "hidden" : ""} md:flex max-h-[48rem] md:max-h-full`}>
                 <div className="flex flex-col justify-between p-8 rounded-lg gap-6 border border-gray-200 shadow-lg fieldset bg-base-200 overflow-y-auto h-full w-full">
                     {gamePanel}
                 </div>

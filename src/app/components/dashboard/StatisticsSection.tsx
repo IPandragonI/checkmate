@@ -40,7 +40,7 @@ function StatisticsSection({gameHistory, user, puzzleHistory}: {
     const favoritePuzzleThemeCount = favoritePuzzleTheme[favoritePuzzleThemeKey] || 0;
 
     return (
-        <div className="bg-base-200 rounded-xl shadow p-6 h-full xl:max-h-[50rem]">
+        <div className="bg-base-200 rounded-xl shadow p-6 h-full xl:max-h-[48rem]">
             <h2 className="text-lg font-bold mb-4">Statistiques</h2>
             <ul className="list rounded-box">
                 <li className="list-row">

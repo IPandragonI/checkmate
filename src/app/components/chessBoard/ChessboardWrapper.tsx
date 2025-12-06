@@ -337,13 +337,13 @@ const ChessboardWrapper: React.FC<ChessboardWrapperProps> = ({
         showAnimations: showAnimations,
         id: 'click-or-drag-to-move',
         allowDragging: canPlay && (!isOnline || isBotTurn) && !isStatic,
+        boardOrientation: boardOrientation,
     };
 
     if (!isStatic) {
         Object.assign(chessboardOptions, {
             onSquareClick: onSquareClick,
             onPieceDrop: onPieceDrop,
-             boardOrientation: boardOrientation,
              arePiecesDraggable: canPlay && (!isOnline || isBotTurn),
         });
     }

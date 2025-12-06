@@ -17,7 +17,7 @@ function GamesInProgressSection({gameHistory, user}: { gameHistory?: any[], user
     }
 
     return (
-        <div className="col-span-4 xl:col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full overflow-y-auto max-h-[50rem]">
+        <div className="col-span-4 xl:col-span-1 row-span-2 bg-base-200 rounded-xl shadow p-6 h-full overflow-y-auto max-h-[48rem]">
             <h2 className="text-lg font-bold mb-4">Parties en cours</h2>
             <ul className="space-y-4 overflow-y-auto">
                 {gamesInProgress.map((game) => {

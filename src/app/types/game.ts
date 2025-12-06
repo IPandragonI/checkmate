@@ -212,7 +212,7 @@ export const CATEGORY_DEFINITIONS: {
         key: 'ENDGAME',
         label: 'Finales',
         keywords: ['ENDGAME', 'FINAL', 'BISHOP_ENDGAME', 'KNIGHT_ENDGAME', 'PAWN_ENDGAME', 'QUEEN_ENDGAME', 'QUEEN_ROOK_ENDGAME', 'ROOK_ENDGAME'],
-        exampleFen: '8/8/8/8/8/5k2/6p1/K7 w - - 0 1',
+        exampleFen: '6R1/p7/1n1p4/3k2Np/4P1pP/3K2P1/5r2/8 b - - 0 43',
         message: 'Résolvez la finale !'
 
     },
@@ -220,7 +220,7 @@ export const CATEGORY_DEFINITIONS: {
         key: 'ATTACK',
         label: 'Attaque',
         keywords: ['ATTACK', 'KINGSIDE', 'QUEENSIDE', 'F2_F7', 'X_RAY', 'ATTACKING_F2_F7', 'EXPOSED_KING'],
-        exampleFen: '8/8/8/8/3k4/8/2Q5/K7 w - - 0 1',
+        exampleFen: '8/1p6/4kpp1/1pP4p/pP2K3/P4P1P/6P1/8 b - - 0 1',
         message: 'Lancez une attaque décisive !'
     },
     {
@@ -234,14 +234,14 @@ export const CATEGORY_DEFINITIONS: {
         key: 'PROMO',
         label: 'Promotion',
         keywords: ['PROMOTION', 'UNDER_PROMOTION'],
-        exampleFen: '8/8/8/8/8/5P2/6k1/K6R w K - 0 1',
+        exampleFen: '8/1P3ppp/8/8/8/2pk3P/3p2P1/3K4 w - - 0 1',
         message: 'Faites une promotion stratégique !'
     },
     {
         key: 'OTHER',
         label: 'Autres',
         keywords: [],
-        exampleFen: '8/8/8/8/8/8/1P6/K1k5 w - - 0 1',
+        exampleFen: '8/1R6/p1pk4/6bp/1QP5/P7/KP6/3r2q1 b - - 0 1',
         message: 'Résolvez ce défi !'
     },
 ];

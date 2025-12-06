@@ -1,5 +1,5 @@
 import Loader from "@/app/utils/Loader";
-import {RotateCcw, Lightbulb, ChevronRight, Eraser, Puzzle, Skull} from "lucide-react"
+import {RotateCcw, Lightbulb, ChevronRight, Eraser, Puzzle, Skull, CircleX, CircleCheck} from "lucide-react"
 import {Svg} from "@/app/utils/Svg";
 import ColorCard from "@/app/components/field/ColorCard";
 import {PUZZLE_DIFFICULTY_LEVELS, CATEGORY_DEFINITIONS, PUZZLE_THEMES} from "@/app/types/game";
@@ -10,7 +10,6 @@ interface PuzzleInfosProps {
     colorToPlay?: 'w' | 'b';
     themes?: string[];
     difficulty?: number;
-    nbMoves?: number;
     isSolved?: boolean;
     onReset?: () => void;
     onFullReset?: () => void;
@@ -24,19 +23,55 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                                                      colorToPlay = 'w',
                                                      themes = [],
                                                      difficulty = 0,
-                                                     nbMoves = 1,
                                                      isSolved = false,
-                                                     onReset = () => {
-                                                     },
-                                                     onFullReset = () => {
-                                                     },
-                                                     onHelp = () => {
-                                                     },
-                                                     onNext = () => {
-                                                     },
+                                                     onReset = () => {},
+                                                     onFullReset = () => {},
+                                                     onHelp = () => {},
+                                                     onNext = () => {},
                                                  }) => {
     const category = CATEGORY_DEFINITIONS.find(cat => cat.keywords.some(k => themes.includes(k)));
     const themesLabels = themes.map(t => PUZZLE_THEMES[t] || t);
+
+    let topContent: React.ReactNode;
+    if (isSolved) {
+        topContent = (
+            <>
+                <CircleCheck size={24} className="text-green-500"/>
+                <p className="text-lg font-bold text-green-500">Résolu !</p>
+            </>
+        );
+    } else if (errorMessage) {
+        topContent = (
+            <>
+                <CircleX size={24} className="text-red-500"/>
+                <p className="text-lg font-bold text-red-500">Faux</p>
+            </>
+        );
+    } else {
+        topContent = (
+            <>
+                <ColorCard
+                    selected={false}
+                    onClick={() => {}}
+                    label={colorToPlay === 'w' ? 'Blanc' : 'Noir'}
+                    icon={<Svg src={colorToPlay === 'w' ? '/pieces/wP.svg' : '/pieces/bP.svg'}
+                        alt={colorToPlay === 'w' ? 'Blanc' : 'Noir'} width={24}
+                        height={24}/>}
+                />
+                <div className="text-lg font-bold">Trait aux {colorToPlay === 'w' ? 'Blancs' : 'Noirs'}</div>
+            </>
+        );
+    }
+
+    let messageElement: React.ReactNode;
+    if (isSolved) {
+        messageElement = <p className="text-sm text-green-500">Félicitations ! Vous avez résolu ce problème.</p>;
+    } else if (errorMessage) {
+        messageElement = <p className="text-sm text-red-500">{errorMessage}</p>;
+    } else {
+        messageElement = <p className="text-sm text-gray-500">{category?.message}</p>;
+    }
+
     return (
         <section className="flex flex-col justify-between h-full">
             <div className={"flex flex-col gap-6"}>
@@ -46,25 +81,11 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                 <Loader/> : (
                     <div className={"flex flex-col justify-between h-full p-4"}>
                         <div className="flex flex-col items-start bg-base-100 p-4 rounded-lg">
-                            <div className="flex items-center gap-4 mb-8">
-                                <ColorCard
-                                    selected={false}
-                                    onClick={() => {
-                                    }}
-                                    label={colorToPlay === 'w' ? 'Blanc' : 'Noir'}
-                                    icon={<Svg src={colorToPlay === 'w' ? '/pieces/wP.svg' : '/pieces/bP.svg'}
-                                               alt={colorToPlay === 'w' ? 'Blanc' : 'Noir'} width={24} height={24}/>}
-                                />
-                                <div className="text-lg font-bold">Trait
-                                    aux {colorToPlay === 'w' ? 'Blancs' : 'Noirs'}</div>
+                            <div className="flex items-center gap-2 mb-8">
+                                {topContent}
                             </div>
-                            <p className="text-sm text-gray-500">{category?.message}</p>
+                            <div className="min-h-[1rem]">{messageElement}</div>
                         </div>
-                        {errorMessage && (
-                            <div className="mb-4 p-2 bg-red-100 text-red-800 rounded-md text-center">
-                                {errorMessage}
-                            </div>
-                        )}
                         <div>
                             <div className="flex items-center mb-2">
                                 <span className="text-base">
