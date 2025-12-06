@@ -5,7 +5,7 @@ export default function Layout({children}: { children: React.ReactNode }) {
     return (
         <html lang="fr">
         <head>
-            <title>Checkmate</title>
+            <title>Checkmate - Jeu d'échecs en ligne</title>
             <meta name="description" content="Application de jeu d'échecs"/>
             <meta name="viewport" content="width=device-width, initial-scale=1"/>
             <link rel="icon" href="/favicon.ico"/>

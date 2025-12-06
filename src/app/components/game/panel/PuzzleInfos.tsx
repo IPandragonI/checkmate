@@ -65,11 +65,11 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
 
     let messageElement: React.ReactNode;
     if (isSolved) {
-        messageElement = <p className="text-sm text-green-500">Félicitations ! Vous avez résolu ce problème.</p>;
+        messageElement = <p className="text-sm">Félicitations ! Vous avez résolu ce problème.</p>;
     } else if (errorMessage) {
-        messageElement = <p className="text-sm text-red-500">{errorMessage}</p>;
+        messageElement = <p className="text-sm">{errorMessage}</p>;
     } else {
-        messageElement = <p className="text-sm text-gray-500">{category?.message}</p>;
+        messageElement = <p className="text-sm">{category?.message}</p>;
     }
 
     return (
@@ -81,23 +81,23 @@ const PuzzleInfos: React.FC<PuzzleInfosProps> = ({
                 <Loader/> : (
                     <div className={"flex flex-col justify-between h-full p-4"}>
                         <div className="flex flex-col items-start bg-base-100 p-4 rounded-lg">
-                            <div className="flex items-center gap-2 mb-8">
+                            <div className="flex items-center gap-2 mb-6">
                                 {topContent}
                             </div>
                             <div className="min-h-[1rem]">{messageElement}</div>
                         </div>
                         <div>
                             <div className="flex items-center mb-2">
-                                <span className="text-base">
+                                <span className="text-sm">
                                     <div className="font-bold flex items-center">
-                                        <Puzzle size={22} className="inline-block mr-2"/>Thèmes :</div>
+                                        <Puzzle size={18} className="inline-block mr-2"/>Thèmes :</div>
                                     <p className="ml-8">{themesLabels.join(', ')}</p>
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                <span className="text-base">
+                                <span className="text-sm">
                                     <div className="font-bold flex items-center">
-                                        <Skull size={22} className="inline-block mr-2"/>Difficulté :</div>
+                                        <Skull size={18} className="inline-block mr-2"/>Difficulté :</div>
                                     <p className="ml-8">{PUZZLE_DIFFICULTY_LEVELS[difficulty]}</p>
                                 </span>
                             </div>
